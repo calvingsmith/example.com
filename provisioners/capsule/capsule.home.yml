@@ -1,0 +1,32 @@
+---
+# code: language=ansible
+- name: Deploys VM based on cloud image
+  hosts: host4.home
+  gather_facts: yes
+  become: yes
+  vars:
+    pool_dir: "{{ libvirt_pool_dir }}"
+    vm: capsule.example.com
+    vcpus: 2
+    ram_mb: 12288
+    size: 300G
+    cleanup: no
+    net: default
+    ssh_pub_key: "{{ lookup('file', '/home/cgs/.ssh/id_rsa.pub') }}"
+
+  tasks:
+    - name: Provision capsule
+      include_role:
+        name: kvm_provision
+      vars:
+#         libvirt_pool_dir: "{{ pool_dir }}"
+        vm_name: "{{ vm }}"
+        vm_vcpus: "{{ vcpus }}"
+        vm_ram_mb: "{{ ram_mb }}"
+        vm_size: "{{ size }}"
+        vm_net: "{{ net }}"
+        cleanup_tmp: "{{ cleanup }}"
+        ssh_key: "{{ ssh_pub_key }}"
+
+
+      

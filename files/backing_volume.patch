@@ -1,0 +1,15 @@
+--- volume.xml.erb.orig 2023-08-16 08:33:19.022715729 -0400
++++ volume.xml.erb      2023-08-16 08:53:16.159887544 -0400
+@@ -20,8 +20,12 @@
+           <path><%= backing_volume.path %></path>
+           <format type="<%= backing_volume.format_type %>"/>
+           <permissions>
++            <% if owner -%>
+             <owner><%= owner %></owner>
++            <% end -%>
++            <% if group -%>
+             <group><%= group %></group>
++            <% end -%>
+             <mode>0744</mode>
+             <label>virt_image_t</label>
+           </permissions>

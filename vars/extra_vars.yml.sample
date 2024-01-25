@@ -1,0 +1,4 @@
+satellite_server: "satellite.example.com"
+satellite_username: "admin"
+satellite_password: "satellite123"
+default_password: "r3dh4t1!"

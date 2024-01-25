@@ -1,0 +1,150 @@
+---
+# code: language=ansible
+- name: Setup DISA STIG Compliance demo
+  hosts: satellite
+  become: true
+  vars:
+    - bash_script: true
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
+
+  tasks:
+    - name: Ensure community.general is installed properly
+      community.general.ansible_galaxy_install:
+        type: collection
+        name: community.general
+        dest: /etc/ansible/collections
+
+    - name: Collect current settings
+      ansible.builtin.command:
+        cmd: satellite-installer --help
+      register: result
+      changed_when: false
+
+    - name: Enable REX pull on the satellite
+      ansible.builtin.include_role:
+        name: redhat.satellite_operations.installer
+      vars:
+        satellite_installer_scenario: satellite
+        satellite_installer_options:
+          - "--foreman-proxy-plugin-remote-execution-script-mode pull-mqtt"
+      when: (result.stdout | regex_search('mqtt')) is none
+
+    - name: Set prefer through registered through Satelliter # noqa: args[module]
+      redhat.satellite.setting:
+        name: remote_execution_prefer_registered_through_proxy
+        value: true
+
+    # # abort for testing
+    # - name: Abort
+    #   ansible.builtin.meta: end_play
+
+    # Collect foreman-proxy ssh key
+    - name: Get satellite ssh key
+      ansible.builtin.fetch:
+        src: /var/lib/foreman-proxy/ssh/id_rsa_foreman_proxy.pub
+        dest: files/satellite_key.pub
+        flat: true
+
+    # See if foreman scap client role is installed ( ansible roles sync spawns task so doing it this way)
+    - name: Is foreman_scap_client installed?
+      ansible.builtin.command:
+        cmd: hammer --no-headers ansible roles list --search theforeman.foreman_scap_client
+      register: my_output
+      failed_when: "my_output.stderr != ''"
+      changed_when: false
+
+    # Import scap client if needed
+    - name: Import foreman_scap_client if needed
+      ansible.builtin.command:
+        cmd: hammer ansible roles sync --proxy-id 1 --role-names theforeman.foreman_scap_client
+      when: my_output.stdout == ""
+      changed_when: true
+
+    - name: Load STIG profiler # noqa: args[module]
+      redhat.satellite.job_template:
+        name: "Apply STIG profile"
+        job_category: "OpenSCAP"
+        provider_type: "script"
+        file_name: "/usr/share/scap-security-guide/bash/rhel8-script-stig.sh"
+        state: present
+      when: bash_script
+
+    # Run ansible role to configure SCAP policy
+    # - name: Run foreman_scap_client ansible role
+
+    # Create sub host group ( host_parameters are hit or miss )
+    - name: Create STIG host group # noqa: args[module]
+      redhat.satellite.hostgroup:
+        name: "stig"
+        parent: "rhel8-server"
+        ansible_roles:
+          - theforeman.foreman_scap_client
+        activation_keys: "{{ host_activation_key }}"
+        organization: "Default Organization"
+        parameters:
+          # - name: remote_execution_create_user
+          #   parameter_type: boolean
+          #   value: true
+          # - name: remote_execution_effective_user_password
+          #   value: r3dh4t1!
+          - name: package_upgrade
+            parameter_type: boolean
+            value: false
+
+    # Provision compliance server
+    - name: Provision compliance server # noqa: args[module]
+      redhat.satellite.host:
+        name: "{{ compliance_server }}"
+        hostgroup: rhel8-server/stig
+        provision_method: image
+        compute_resource: "libvirt hypervisor"
+        image: "rhel-8"
+        # build: true
+        location: "{{ satellite_location }}"
+        organization: "{{ satellite_organization }}"
+        state: present
+      register: host_info
+
+    - name: Is host powered on? (would be off if newly provisioned) # noqa: args[module]
+      redhat.satellite.host_power:
+        hostname: "{{ compliance_server }}"
+        state: state
+      register: host_state
+
+    - name: Enable build state if new build # noqa: args[module]
+      redhat.satellite.host:
+        build: true
+        name: "{{ compliance_server }}"
+      when: host_state.power_state is match('off')
+
+    - name: If machine is down, power on  # noqa: args[module]
+      redhat.satellite.host_power:
+        hostname: "{{ compliance_server }}"
+        state: on # noqa: yaml[truthy]
+      notify: wait_for_build
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+
+    - name: Install REX pull client
+      ansible.builtin.dnf:
+        name: katello-pull-transport-migrate
+        state: present
+      delegate_to: "{{ compliance_server }}"
+
+  handlers:
+    - name: Wait until server build is complete
+      listen: wait_for_build
+      ansible.builtin.command:
+        cmd: hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build
+      register: result
+      until: result.stdout.find("Installed") != -1
+      retries: 30
+      delay: 15

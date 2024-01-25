@@ -1,0 +1,33 @@
+review infrastructure
+capsule
+- DNS
+- PXE
+- DHCP
+
+Review provisioning infrastructure 
+ - pxe support
+
+stateless image provisioning
+- details 
+- review architecture 
+
+- host group
+
+Git integration:
+- provisioning templates
+
+alternatives
+
+
+
+stateful installation (PXE to RHEL Anaconda installer with ~kickstart)
+stateless (PXE to RAM image)
+creation of RAM image
+PXE support in general, including DHCP/TFTP, and ability to accept from different subnets
+DNS services?
+bootstrapping ad-ons, e.g., ability to serve NFS or for us to publish Ad-hoc content via HTTP and run “postscripts” to pull that down and act on it
+simple bootstrapping – e.g. mount persistent disks to stateless image – are these done with simple Ansible playbooks (independent of Ansible Automation)
+examples of using Ansible playbooks directly from Satellite (not Ansible Automation)
+any control capabilities: IPMI, remote console, parallel shell — can these be orchestrated remotely/in a distributed fashion from Satellite? or is it possible to set those things up on capsules?
+Host Log aggregation and host state monitoring – e.g. SEL or console logs from IPMI
+Different external authentication based on Locations or Organizations (or just support for multiple external authentication in general)

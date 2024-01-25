@@ -1,0 +1,9 @@
+
+1. Configure REX in pull mode on satellite
+2. Configure a client to consume the REX queue
+3. Mount /tmp on the client with "noexec"
+4. Try running any job
+
+- Use compliance-demo.yml environment
+
+* Why doesn't fields in job category search not have the _? 

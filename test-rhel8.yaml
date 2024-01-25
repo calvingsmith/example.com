@@ -1,0 +1,26 @@
+---
+# code: language=ansible
+- name: Deploys VM based on cloud image
+  hosts: host4.home
+  gather_facts: yes
+  become: yes
+  vars:
+    pool_dir: "{{ libvirt_pool_dir }}"
+    vm: test-rhel8
+    vcpus: 2
+    ram_mb: 12288
+    cleanup: no
+    net: default
+    ssh_pub_key: "{{ lookup('file', '/home/cgs/.ssh/id_rsa.pub') }}"
+
+  tasks:
+    - name: KVM Provision role
+      include_role:
+        name: kvm_provision
+      vars:
+        vm_name: "{{ vm }}"
+        vm_vcpus: "{{ vcpus }}"
+        vm_ram_mb: "{{ ram_mb }}"
+        vm_net: "{{ net }}"
+        cleanup_tmp: "{{ cleanup }}"
+        ssh_key: "{{ ssh_pub_key }}"

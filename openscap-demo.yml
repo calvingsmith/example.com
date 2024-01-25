@@ -1,0 +1,113 @@
+---
+# code: language=ansible
+- name: Setup satellite for provisioning
+  # gather_facts: false
+  hosts: 'all'
+  become: true
+  vars_files:
+    - sat_repos.yml
+
+  tasks:
+    - name: Apply patch for instance based provisioning on libvirt
+      ansible.posix.patch:
+        src: backing_volume.patch
+        dest: /usr/share/gems/gems/fog-libvirt-0.9.0/lib/fog/libvirt/models/compute/templates/volume.xml.erb
+        backup: true
+
+    - name: Install additional software
+      ansible.builtin.yum:
+        name:
+          - libvirt-client
+          - rhel-system-roles
+        disable_plugin:
+          - foreman-protector
+        state: present
+
+    - name: SSH key create
+      ansible.builtin.user:
+        name: foreman
+        generate_ssh_key: true
+        ssh_key_file: .ssh/id_rsa
+      register: ssh_key
+
+    - name: SSH public key Install
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ ssh_key.ssh_public_key }}"
+      delegate_to: "root@host4.home"
+
+    - name: Create compute resource
+      redhat.satellite.compute_resource:
+        name: libvirt hypervisor
+        provider: libvirt
+        provider_params:
+          url: qemu+ssh://root@1host4.home/system
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+
+    - name: Create compute item.profile # noqa: args[module]
+      redhat.satellite.compute_profile:
+        name: libvirt-compute
+        compute_attributes:
+          - compute_resource: libvirt hypervisor
+            vm_attrs:
+              cpus: 1
+              memory: 4294967296 # 4 GB
+              # virtual (NAT) / example.com network example.com domain
+              nics_attributes:
+                0:
+                  type: network
+                  network: example.com
+                  model: virtio
+              volumes_attributes:
+                0:
+                  pool_name: default
+                  capacity: 10G
+                  format_type: qcow2
+            state: present
+
+    # Need to parameterize
+    #
+    - name: Add image # noqa: args[module]
+      redhat.satellite.image:
+        name: rhel-8
+        architecture: x86_64
+        operatingsystem: "RHEL 8.8" # This might change to RedHat 8.8 on rebuild"
+        uuid: "/home/images/rhel-8.8-x86_64-kvm.qcow2"
+        compute_resource: libvirt hypervisor
+        image_username: root
+        user_data: true
+        state: present
+
+    - name: Satellite settings for provisioning # noqa: args[module]
+      ansible.builtin.include_role:
+        name: redhat.satellite.settings
+      vars:
+        satellite_settings:
+          - name: destroy_vm_on_host_delete
+            value: true
+
+    - name: Setup activationkey # noqa: args[module]
+      redhat.satellite.activation_key:
+        name: "{{ host_activation_key }}"
+        lifecycle_environment: "Library"
+        content_view: "Default Organization View"
+        state: present
+        organization: "{{ satellite_organization }}"
+    # Set up host group "hosts"  (test)
+
+    # Provision client
+    - name: Provision client # noqa: args[module]
+      redhat.satellite.host:
+        name: "host1.example.com"
+        hostgroup: test
+        provision_method: image
+        compute_resource: libvirt hypervisor
+        image: "rhel-8"
+        architecture: x86_64
+        operatingsystem: "RHEL 8.8"
+        location: "{{ satellite_location }}"
+        organization: "{{ satellite_organization }}"
+        state: present

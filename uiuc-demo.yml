@@ -1,0 +1,310 @@
+---
+# code: language=ansible
+- name: Setup diskless system demo
+  hosts: satellite
+  become: true
+  vars_files:
+    - sat_repos.yml
+
+  tasks:
+    - name: Import network boot template
+      redhat.satellite.templates_import:
+        repo: https://github.com/calvingsmith/sat-templates.git
+        branch: .
+        associate: always
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+
+    - name: Set network boot template as default
+      ansible.builtin.include_role:
+        name: redhat.satellite.settings
+      vars:
+        satellite_settings:
+          - name: local_boot_PXELinux
+            value: "PXELinux default network boot"
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+
+    - name: Create nfsroot compute profile
+      redhat.satellite.compute_profile:
+        name: nfsroot
+        compute_attributes:
+          - compute_resource: libvirt hypervisor
+            vm_attrs:
+              cpus: 1
+              memory: 4294967296 # 4 GB
+              # virtual (NAT) / example.com network example.com domain
+              nics_attributes:
+                0:
+                  type: network
+                  network: example.com
+                  model: virtio
+        state: present
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+
+    - name: Create nfsroot host group
+      redhat.satellite.hostgroup:
+        name: "nfsroot"
+        organization: "Default Organization"
+        lifecycle_environment: "Library"
+        content_view: "Default Organization View"
+        content_source: "{{ satellite_server }}"
+        openscap_proxy: "{{ satellite_server }}"
+        compute_profile: "nfsroot"
+        domain: "example.com"
+        subnet: "Example network"
+        architecture: "x86_64"
+        operatingsystem: "RHEL 8.8"
+        parameters:
+        activation_keys: "{{ host_activation_key }}"
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        state: present
+
+    # Install ansible nfs role
+    - name: Install NFS role
+      community.general.ansible_galaxy_install:
+        type: role
+        name: geerlingguy.nfs
+        dest: /etc/ansible/roles
+      notify: load_role
+
+    # Collect foreman-proxy ssh key
+    - name: Get satellite ssh key
+      ansible.builtin.fetch:
+        src: /var/lib/foreman-proxy/ssh/id_rsa_foreman_proxy.pub
+        dest: files/satellite_key.pub
+        flat: true
+
+    # Provision nfs server
+    - name: Provision NFS server
+      redhat.satellite.host:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        name: "{{ nfs_server }}"
+        hostgroup: server
+        provision_method: image
+        compute_resource: libvirt hypervisor
+        build: true
+        image: "rhel-8"
+        architecture: x86_64
+        operatingsystem: "RHEL 8.8"
+        activation_keys: "ak-rhel8"
+        parameters:
+          - name: remote_execution_ssh_keys
+            parameter_type: array
+            value:
+              - "{{  }}"
+          - name: nfs_rpcbind_state
+            value: started
+          - name: nfs_rpcbind_enabled
+            parameter_type: boolean
+            value: true
+          - name: nfs_exports
+            parameter_type: array
+            value:
+              - "/shared (ro,sync,no_root_squash)"
+          - name: package_upgrade
+            parameter_type: boolean
+            value: false
+        location: "{{ satellite_location }}"
+        organization: "{{ satellite_organization }}"
+        state: present
+      register: host_info
+
+    - name: Is host powered on? (would be off if newly provisioned)
+      redhat.satellite.host_power:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        hostname: "{{ nfs_server }}"
+        state: state
+      register: host_state
+
+    - name: Enable build state if new build
+      redhat.satellite.host:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        build: "{{ host_state.power_state is match('off') | string }}"
+        name: "{{ nfs_server }}"
+
+    - name: If machine is down, power on
+      redhat.satellite.host_power:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        hostname: "{{ nfs_server }}"
+        # yamllint disable rule:truthy
+        state: on
+        # yamllint disable rule:truthy
+      notify: wait_for_build
+
+    - name: Assign role to NFS server
+      ansible.builtin.command:
+        cmd: hammer host ansible-roles assign --ansible-roles geerlingguy.nfs --name "{{ nfs_server }}"
+      register: my_output
+      changed_when: my_output.rc != 0
+
+    - name: Run ansible roles on NFS server
+      ansible.builtin.command:
+        cmd: hammer host ansible-roles play --name "{{ nfs_server }}"
+      register: my_output
+      changed_when: my_output.rc != 0
+
+  handlers:
+  # Load ansible nfs role into satellite
+    - name: Load NFS role into satellite
+      listen: load_role
+      ansible.builtin.command:
+        cmd: hammer ansible roles sync --proxy-id 1 --role-names geerlingguy.nfs
+      register: my_output
+      changed_when: my_output.rc != 0
+
+    - name: Wait until server build is complete
+      listen: wait_for_build
+      ansible.builtin.command:
+        cmd: hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build
+      register: result
+      until: result.stdout.find("Installed") != -1
+      retries: 30
+      delay: 15
+
+#################
+- name: Configure NFS server
+  hosts: nfs_server
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Install OS in NFS_root
+      ansible.builtin.dnf:
+        name:
+          - "@Base"
+          - kernel
+          - dracut-network
+          - nfs-utils
+          - readonly-root
+          - cockpit-system
+          - cockpit-bridge
+          - cockpit-ws
+          - cockpit-podman
+          - openssh-server
+          - openssh-clients
+        installroot: "/shared"
+        releasever: 8
+        state: present
+
+    - name: Fixup root password
+      ansible.builtin.lineinfile:
+        path: /shared/etc/shadow
+        regexp: '^root:'
+        line: "root:$5$h6TekEQWxRUcbpxM$xXVZxJlhcyoZ0fUxqsdzWwF4mRtUr.lX0.muO8HHkX7:19604:0:99999:7:::"
+
+    - name: Create some necessary dirs
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0644'
+      with_items:
+        - "/shared/root/.ssh/"
+        - "/shared/var/lib/containers"
+        - "/shared/var/lib/cni/networks"
+
+    - name: Install config files
+      ansible.builtin.copy:
+        src: "{{ item.0 }}"
+        dest: "/shared/{{ item.1 }}"
+        owner: root
+        group: root
+        mode: "{{ item.2 | default('0644')}}"
+      loop:
+        - ['rsyslog.rwtab', 'etc/rwtab.d/rsyslog']
+        - ['cockpit.rwtab', 'etc/rwtab.d/cockpit']
+        - ['ssh.rwtab', 'etc/rwtab.d/ssh']
+        - ['satellite_key.pub', 'root/.ssh/authorized_keys', '0600']
+        - ['gssproxy.rwtab', 'etc/rwtab.d/gssproxy']
+        - ['dnf.rwtab', 'etc/rwtab.d/dnf']
+        - ['podman.rwtab', 'etc/rwtab.d/podman']
+
+  # - name: Disable ipv6
+  #   ansible.builtin.copy:
+  #     src: ipv6.conf
+  #     dest: /shared/etc/sysctl.d/ipv6.conf
+  #     owner: root
+  #     group: root
+  #     mode: '0644'
+
+    - name: Enable readonly root filesystem
+      ansible.builtin.lineinfile:
+        path: /shared/etc/sysconfig/readonly-root
+        regexp: '^READONLY'
+        line: "READONLY=yes"
+
+    - name: Find kernel and initramfs names
+      ansible.builtin.find:
+        paths: "/shared/boot"
+        patterns: "vmlinuz-*,initramfs-*"
+      register: kernel
+
+    - name: Fetch kernel
+      ansible.builtin.fetch:
+        src: "{{ item.path }}"
+        dest: /tmp/
+        flat: true
+      with_items: "{{ kernel.files }}"
+
+
+- name: Provision client and finalize satellite
+  hosts: satellite
+  become: true
+  gather_facts: true
+  vars_files:
+    - sat_repos.yml
+
+  tasks:
+    - name: Copy kernel files to correct location on satellite
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "/var/lib/tftpboot/{{ item | basename | split('-') | first }}"
+        owner: foreman-proxy
+        group: root
+        mode: '0644'
+      with_fileglob:
+        - "/tmp/vmlinuz*"
+        - "/tmp/initramfs*"
+
+    # Provision client
+    - name: Provision client
+      redhat.satellite.host:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        name: "host1.example.com"
+        hostgroup: nfsroot
+        provision_method: build
+        compute_resource: libvirt hypervisor
+        build: false # OS already on NFS root
+        architecture: x86_64
+        operatingsystem: "RHEL 8.8"
+        location: "{{ satellite_location }}"
+        organization: "{{ satellite_organization }}"
+        state: present
+
+    - name: If machine is down, power on
+      redhat.satellite.host_power:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        hostname: "host1.example.com"
+        # yamllint disable rule:truthy
+        state: on
+        # yamllint enable rule:truthy

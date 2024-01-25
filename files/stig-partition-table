@@ -1,0 +1,14 @@
+# Partition clearing information
+clearpart --all --initlabel --drives=vda
+# Disk partitioning information
+part /boot --fstype="xfs" --ondisk=vda --size=1024
+part pv.01 --fstype="lvmpv" --ondisk=vda --grow --size=1
+volgroup rhel --pesize=4096 pv.01
+logvol /  --fstype="xfs" --size=24576 --name=root --vgname=rhel
+logvol /home  --fstype="xfs" --size=1 --grow --name=home --vgname=rhel --fsoptions="nodev"
+logvol /var  --fstype="xfs" --size=22528 --name=var --vgname=rhel --fsoptions="nodev"
+logvol /var/tmp --fstype="xfs" --size=2048 --name=var_tmp --vgname=rhel --fsoptions="nodev,noexec,nosuid"
+logvol /var/log  --fstype="xfs" --size=12288 --name=var_log --vgname=rhel --fsoptions="nodev,noexec,nosuid"
+logvol /var/log/audit  --fstype="xfs" --size=10240 --name=var_log_audit --vgname=rhel --fsoptions="nodev,noexec,nosuid"
+logvol /tmp  --fstype="xfs" --size=4096 --name=tmp --vgname=rhel --fsoptions="nodev,noexec,nosuid"
+logvol swap  --fstype="swap" --size=8192 --name=swap --vgname=rhel

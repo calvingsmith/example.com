@@ -1,0 +1,54 @@
+---
+# code: language=ansible
+- name: Fixup composer for satellite
+  hosts: 'all'
+  become: true
+  vars:
+    osfile: rhel-88.json
+    satellite_path: "satellite.example.com/pulp/content/Default_Organization/Library"
+
+  tasks:
+    - name: Create directory
+      ansible.builtin.file:
+        path: /etc/osbuild-composer/repositories
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: RHEL-8x.json file copy
+      ansible.builtin.copy:
+        src: "/usr/share/osbuild-composer/repositories/{{ osfile }}"
+        dest: "/etc/osbuild-composer/repositories/{{ osfile }}"
+        remote_src: true
+        mode: '0644'
+
+    - name: Fixup json file
+      ansible.builtin.replace:
+        path: "/etc/osbuild-composer/repositories/{{ osfile }}"
+        regexp: "cdn.redhat.com"
+        replace: "{{ satellite_path }}"
+        backup: true
+
+    - name: Backup certificate
+      ansible.builtin.copy:
+        src: /etc/rhsm/ca/redhat-uep.pem
+        dest: /etc/rhsm/ca/redhat-uep.pem.orig
+        mode: '0644'
+
+    - name: Move files around
+      ansible.builtin.file:
+        src: /etc/rhsm/ca/katello-server-ca.pem
+        dest: /etc/rhsm/ca/redhat-uep.pem
+        state: link
+        force: true
+
+    - name: Restart services
+      ansible.builtin.systemd_service:
+        state: restarted
+        daemon_reload: true
+        name: "{{ item }}"
+      loop:
+        - osbuild-worker@.service.d
+        - osbuild-worker@1.service
+        - osbuild-composer.service

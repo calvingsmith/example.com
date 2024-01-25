@@ -1,0 +1,532 @@
+ok: [satellite.example.com]
+host_info:
+  changed: true
+  diff:
+    after:
+      hosts:
+      - architecture_id: 1
+        build: true
+        compute_profile_id: 4
+        compute_resource_id: 2
+        domain_id: 1
+        enabled: true
+        host_parameters_attributes:
+        - associated_type: host
+          created_at: 2023-09-02 06:19:16 UTC
+          hidden_value?: false
+          id: 141
+          name: kt_activation_keys
+          parameter_type: string
+          priority: 70
+          updated_at: 2023-09-02 06:19:16 UTC
+          value: ak-rhel8
+        - associated_type: host
+          created_at: 2023-09-02 06:19:16 UTC
+          hidden_value?: false
+          id: 139
+          name: nfs_exports
+          parameter_type: array
+          priority: 70
+          updated_at: 2023-09-02 06:19:16 UTC
+          value:
+          - /shared (rw,sync,no_root_squash)
+        - associated_type: host
+          created_at: 2023-09-02 06:19:16 UTC
+          hidden_value?: false
+          id: 138
+          name: nfs_rpcbind_enabled
+          parameter_type: boolean
+          priority: 70
+          updated_at: 2023-09-02 06:19:16 UTC
+          value: true
+        - associated_type: host
+          created_at: 2023-09-02 06:19:16 UTC
+          hidden_value?: false
+          id: 137
+          name: nfs_rpcbind_state
+          parameter_type: string
+          priority: 70
+          updated_at: 2023-09-02 06:19:16 UTC
+          value: started
+        - associated_type: host
+          created_at: 2023-09-02 06:19:16 UTC
+          hidden_value?: false
+          id: 140
+          name: package_upgrade
+          parameter_type: boolean
+          priority: 70
+          updated_at: 2023-09-02 06:19:16 UTC
+          value: false
+        - associated_type: host
+          created_at: 2023-09-02 06:19:16 UTC
+          hidden_value?: false
+          id: 136
+          name: remote_execution_ssh_keys
+          parameter_type: array
+          priority: 70
+          updated_at: 2023-09-02 06:19:16 UTC
+          value:
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNNJhc7ypD9Bel0Vhiqrxryxao2t7SrthG6wxMTPHZpxeoTd7eRPi3DaFmVx1YNAgd/a/fCeqH1iuQ5kh7tW8X7H2gz0AkjBlDkR9TY29/ppevfXwmrv8Vyqt/dz2yQmgz9E9Pv5h6uO8ty2XmTnPLrrQDPxatQDMNsdpJ4cScorY8yzDeMfjWAIE6bB833RTg9cYj0NFuUTumsDTspgJq83KED4ejv1NWw6wS78Lh7Gt8PmV3ZusufAB1p6Wi8gGumaxsJTMdnyoBBr1WJzAmksAESCbbl02nTI2cwYjGMxJPcszpAiyrRQlNfXJpBfSoTt4Lzaa+C8BieNe5sAaF cgs@host1.home
+        hostgroup_id: 4
+        id: 48
+        image_id: 1
+        ip: 192.168.100.182
+        location_id: 2
+        mac: 52:54:00:db:40:c5
+        managed: true
+        name: server.example.com
+        operatingsystem_id: 1
+        organization_id: 1
+        owner_id: 4
+        owner_type: User
+        provision_method: image
+        pxe_loader: PXELinux BIOS
+        subnet_id: 1
+    before:
+      hosts:
+      - architecture_id: 1
+        build: false
+        compute_profile_id: 4
+        compute_resource_id: 2
+        domain_id: 1
+        enabled: true
+        host_parameters_attributes:
+        - name: kt_activation_keys
+          parameter_type: string
+          value: ak-rhel8
+        - name: nfs_exports
+          parameter_type: array
+          value: '["/shared (rw,sync,no_root_squash)"]'
+        - name: nfs_rpcbind_enabled
+          parameter_type: boolean
+          value: true
+        - name: nfs_rpcbind_state
+          parameter_type: string
+          value: started
+        - name: package_upgrade
+          parameter_type: boolean
+          value: false
+        - name: remote_execution_ssh_keys
+          parameter_type: array
+          value: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNNJhc7ypD9Bel0Vhiqrxryxao2t7SrthG6wxMTPHZpxeoTd7eRPi3DaFmVx1YNAgd/a/fCeqH1iuQ5kh7tW8X7H2gz0AkjBlDkR9TY29/ppevfXwmrv8Vyqt/dz2yQmgz9E9Pv5h6uO8ty2XmTnPLrrQDPxatQDMNsdpJ4cScorY8yzDeMfjWAIE6bB833RTg9cYj0NFuUTumsDTspgJq83KED4ejv1NWw6wS78Lh7Gt8PmV3ZusufAB1p6Wi8gGumaxsJTMdnyoBBr1WJzAmksAESCbbl02nTI2cwYjGMxJPcszpAiyrRQlNfXJpBfSoTt4Lzaa+C8BieNe5sAaF cgs@host1.home"]'
+        hostgroup_id: 4
+        id: 48
+        image_id: 1
+        ip: 192.168.100.182
+        location_id: 2
+        mac: 52:54:00:db:40:c5
+        managed: true
+        name: server.example.com
+        operatingsystem_id: 1
+        organization_id: 1
+        owner_id: 4
+        owner_type: User
+        provision_method: image
+        pxe_loader: PXELinux BIOS
+        subnet_id: 1
+  entity:
+    hosts:
+    - all_parameters:
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 141
+        name: kt_activation_keys
+        parameter_type: string
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value: ak-rhel8
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 139
+        name: nfs_exports
+        parameter_type: array
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value:
+        - /shared (rw,sync,no_root_squash)
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 138
+        name: nfs_rpcbind_enabled
+        parameter_type: boolean
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value: true
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 137
+        name: nfs_rpcbind_state
+        parameter_type: string
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value: started
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 140
+        name: package_upgrade
+        parameter_type: boolean
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value: false
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 136
+        name: remote_execution_ssh_keys
+        parameter_type: array
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value:
+        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNNJhc7ypD9Bel0Vhiqrxryxao2t7SrthG6wxMTPHZpxeoTd7eRPi3DaFmVx1YNAgd/a/fCeqH1iuQ5kh7tW8X7H2gz0AkjBlDkR9TY29/ppevfXwmrv8Vyqt/dz2yQmgz9E9Pv5h6uO8ty2XmTnPLrrQDPxatQDMNsdpJ4cScorY8yzDeMfjWAIE6bB833RTg9cYj0NFuUTumsDTspgJq83KED4ejv1NWw6wS78Lh7Gt8PmV3ZusufAB1p6Wi8gGumaxsJTMdnyoBBr1WJzAmksAESCbbl02nTI2cwYjGMxJPcszpAiyrRQlNfXJpBfSoTt4Lzaa+C8BieNe5sAaF cgs@host1.home
+      - associated_type: global
+        created_at: 2023-08-17 05:41:40 UTC
+        hidden_value?: false
+        id: 3
+        name: host_registration_remote_execution
+        parameter_type: boolean
+        priority: 0
+        updated_at: 2023-08-17 05:41:40 UTC
+        value: true
+      - associated_type: global
+        created_at: 2023-08-17 05:40:54 UTC
+        hidden_value?: false
+        id: 1
+        name: host_registration_insights
+        parameter_type: boolean
+        priority: 0
+        updated_at: 2023-08-17 05:40:54 UTC
+        value: true
+      - associated_type: global
+        created_at: 2023-08-17 05:41:40 UTC
+        hidden_value?: false
+        id: 4
+        name: host_packages
+        parameter_type: string
+        priority: 0
+        updated_at: 2023-08-17 05:41:40 UTC
+        value: ''
+      - associated_type: global
+        created_at: 2023-08-17 05:41:41 UTC
+        hidden_value?: false
+        id: 6
+        name: enable-puppet5
+        parameter_type: string
+        priority: 0
+        updated_at: 2023-08-17 05:41:41 UTC
+        value: 'true'
+      - associated_type: global
+        created_at: 2023-08-17 05:41:41 UTC
+        hidden_value?: false
+        id: 5
+        name: enable-epel
+        parameter_type: string
+        priority: 0
+        updated_at: 2023-08-17 05:41:41 UTC
+        value: 'false'
+      - associated_type: global
+        created_at: 2023-08-17 05:41:39 UTC
+        hidden_value?: false
+        id: 2
+        name: ansible_roles_check_mode
+        parameter_type: boolean
+        priority: 0
+        updated_at: 2023-08-17 05:41:39 UTC
+        value: false
+      architecture_id: 1
+      architecture_name: x86_64
+      bmc_available: false
+      build: true
+      build_status: 1
+      build_status_label: Pending installation
+      capabilities:
+      - build
+      - image
+      - new_volume
+      certname: server.example.com
+      cockpit_url: /webcon/=server.example.com
+      comment: null
+      compute_profile_id: 4
+      compute_profile_name: libvirt-compute
+      compute_resource_id: 2
+      compute_resource_name: libvirt hypervisor
+      content_facet_attributes:
+        applicable_deb_count: 0
+        applicable_module_stream_count: 0
+        applicable_package_count: 0
+        content_source:
+          id: 1
+          name: satellite.example.com
+          url: https://satellite.example.com:9090
+        content_source_id: 1
+        content_source_name: satellite.example.com
+        content_view:
+          composite: false
+          id: 1
+          name: Default Organization View
+        content_view_default?: true
+        content_view_id: 1
+        content_view_name: Default Organization View
+        content_view_version: '1.0'
+        content_view_version_id: 1
+        content_view_version_latest: true
+        errata_counts:
+          applicable:
+            bugfix: 0
+            enhancement: 0
+            security: 0
+            total: 0
+          bugfix: 0
+          enhancement: 0
+          security: 0
+          total: 0
+        id: 41
+        katello_agent_enabled: false
+        katello_agent_installed: false
+        katello_tracer_installed: false
+        kickstart_repository: null
+        kickstart_repository_id: null
+        kickstart_repository_name: null
+        lifecycle_environment:
+          id: 1
+          name: Library
+        lifecycle_environment_id: 1
+        lifecycle_environment_library?: true
+        lifecycle_environment_name: Library
+        permissions:
+          create_bookmarks: true
+          create_job_invocations: true
+          promote_or_remove_content_views_to_environments: true
+          view_activation_keys: true
+          view_content_views: true
+          view_host_collections: true
+          view_lifecycle_environments: true
+          view_products: true
+        remote_execution_by_default: true
+        upgradable_deb_count: 0
+        upgradable_module_stream_count: 0
+        upgradable_package_count: 0
+        uuid: 42f606ec-8d19-47f2-a45c-cef23aefce03
+      created_at: 2023-09-02 06:19:16 UTC
+      disk: null
+      domain_id: 1
+      domain_name: example.com
+      enabled: true
+      errata_status: 1
+      errata_status_label: No installed packages and/or enabled repositories have been reported by katello-host-tools.
+      execution_status: 0
+      execution_status_label: Last execution succeeded
+      facts: {}
+      global_status: 0
+      global_status_label: Warning
+      host_collections: []
+      hostgroup_id: 4
+      hostgroup_name: server
+      hostgroup_title: server
+      id: 48
+      image_file: ''
+      image_id: 1
+      image_name: rhel-8
+      initiated_at: null
+      installed_at: 2023-09-02 06:23:54 UTC
+      interfaces:
+      - created_at: 2023-09-02 06:19:16 UTC
+        domain_id: 1
+        domain_name: example.com
+        execution: true
+        fqdn: server.example.com
+        id: 48
+        identifier: eth0
+        ip: 192.168.100.182
+        ip6: null
+        mac: 52:54:00:db:40:c5
+        managed: true
+        mtu: 1500
+        name: server.example.com
+        primary: true
+        provision: true
+        subnet6_id: null
+        subnet6_name: null
+        subnet_id: 1
+        subnet_name: Example network
+        type: interface
+        updated_at: 2023-09-02 06:24:12 UTC
+        virtual: false
+      ip: 192.168.100.182
+      ip6: null
+      last_compile: 2023-09-02 06:24:11 UTC
+      last_report: null
+      location_id: 2
+      location_name: Default Location
+      mac: 52:54:00:db:40:c5
+      managed: true
+      medium_id: null
+      medium_name: null
+      model_id: 1
+      model_name: KVM
+      name: server.example.com
+      openscap_proxy: null
+      openscap_proxy_id: null
+      openscap_proxy_name: null
+      operatingsystem_id: 1
+      operatingsystem_name: RHEL 8.8
+      organization_id: 1
+      organization_name: Default Organization
+      owner_id: 4
+      owner_name: Admin User
+      owner_type: User
+      parameters:
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 141
+        name: kt_activation_keys
+        parameter_type: string
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value: ak-rhel8
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 139
+        name: nfs_exports
+        parameter_type: array
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value:
+        - /shared (rw,sync,no_root_squash)
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 138
+        name: nfs_rpcbind_enabled
+        parameter_type: boolean
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value: true
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 137
+        name: nfs_rpcbind_state
+        parameter_type: string
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value: started
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 140
+        name: package_upgrade
+        parameter_type: boolean
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value: false
+      - associated_type: host
+        created_at: 2023-09-02 06:19:16 UTC
+        hidden_value?: false
+        id: 136
+        name: remote_execution_ssh_keys
+        parameter_type: array
+        priority: 70
+        updated_at: 2023-09-02 06:19:16 UTC
+        value:
+        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNNJhc7ypD9Bel0Vhiqrxryxao2t7SrthG6wxMTPHZpxeoTd7eRPi3DaFmVx1YNAgd/a/fCeqH1iuQ5kh7tW8X7H2gz0AkjBlDkR9TY29/ppevfXwmrv8Vyqt/dz2yQmgz9E9Pv5h6uO8ty2XmTnPLrrQDPxatQDMNsdpJ4cScorY8yzDeMfjWAIE6bB833RTg9cYj0NFuUTumsDTspgJq83KED4ejv1NWw6wS78Lh7Gt8PmV3ZusufAB1p6Wi8gGumaxsJTMdnyoBBr1WJzAmksAESCbbl02nTI2cwYjGMxJPcszpAiyrRQlNfXJpBfSoTt4Lzaa+C8BieNe5sAaF cgs@host1.home
+      permissions:
+        auto_provision_discovered_hosts: true
+        build_hosts: true
+        cockpit_hosts: true
+        console_hosts: true
+        create_hosts: true
+        destroy_discovered_hosts: true
+        destroy_hosts: true
+        edit_discovered_hosts: true
+        edit_hosts: true
+        forget_status_hosts: true
+        ipmi_boot_hosts: true
+        play_roles_on_host: true
+        power_hosts: true
+        provision_discovered_hosts: true
+        submit_discovered_hosts: true
+        view_discovered_hosts: true
+        view_hosts: true
+      provision_method: image
+      ptable_id: null
+      ptable_name: null
+      puppet_ca_proxy: null
+      puppet_ca_proxy_id: null
+      puppet_ca_proxy_name: null
+      puppet_proxy: null
+      puppet_proxy_id: null
+      puppet_proxy_name: null
+      puppet_status: 0
+      purpose_addons_status: 0
+      purpose_addons_status_label: Unknown
+      purpose_role_status: 0
+      purpose_role_status_label: Unknown
+      purpose_sla_status: 0
+      purpose_sla_status_label: Unknown
+      purpose_status: 0
+      purpose_status_label: Unknown
+      purpose_usage_status: 0
+      purpose_usage_status_label: Unknown
+      pxe_loader: PXELinux BIOS
+      realm_id: null
+      realm_name: null
+      reported_data:
+        bios_release_date: null
+        bios_vendor: null
+        bios_version: null
+        boot_time: 2023-09-02 06:19:22 UTC
+        cores: 1
+        disks_total: null
+        kernel_version: 4.18.0-477.10.1.el8_8.x86_64
+        sockets: 1
+      sp_ip: null
+      sp_mac: null
+      sp_name: null
+      sp_subnet_id: null
+      subnet6_id: null
+      subnet6_name: null
+      subnet_id: 1
+      subnet_name: Example network
+      subscription_facet_attributes:
+        activation_keys:
+        - id: 4
+          name: ak-rhel8
+        autoheal: true
+        compliance_reasons: []
+        dmi_uuid: 3A2441FA-7453-4F97-84F5-4B9AA18E6424
+        host_type: null
+        hypervisor: false
+        id: 35
+        installed_products:
+        - arch: x86_64
+          productId: '479'
+          productName: Red Hat Enterprise Linux for x86_64
+          version: '8.8'
+        last_checkin: 2023-09-02 06:33:20 UTC
+        purpose_addons: []
+        purpose_role: Red Hat Enterprise Linux Server
+        purpose_usage: ''
+        registered_at: 2023-09-02 06:19:40 UTC
+        registered_through: satellite.example.com
+        release_version: '8'
+        service_level: Standard
+        user: null
+        uuid: 42f606ec-8d19-47f2-a45c-cef23aefce03
+        virtual_guests: []
+        virtual_host: null
+      subscription_global_status: 1
+      subscription_status: 3
+      subscription_status_label: Unknown subscription status
+      token: 06fb5b54-c7d2-40ef-b1a8-34f32fcd6e2c
+      updated_at: 2023-09-02 06:33:22 UTC
+      uptime_seconds: 840
+      use_image: null
+      uuid: 3a2441fa-7453-4f97-84f5-4b9aa18e6424
+  failed: false

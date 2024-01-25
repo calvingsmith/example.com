@@ -1,0 +1,2 @@
+dirs   /var/lib/cni/networks
+dirs   /var/lib/containers/storage/tmp

@@ -1,0 +1,70 @@
+After satellite is built
+- turn off DHCP in private network
+- build example.com network
+- destroy_vm_on_host_delete yes
+- root_pass ?
+- what's up with model? butting libvirt hypervisor there (need to fix but low prio)
+
+More satellite config
+- configure pxe boot
+- configure dns resource
+- fixup PS1
+
++ hypervisor configuration:
+- generate ssh keypair for foreman user on satellite
+- copy public key to hypervisor
+- libvirt-client needs to be install
+- get host key verified? actually need to fixup known_hosts file
+- public key goes on hypervisor as authorized_key for root user
+(how to hit multiple machines in playbook? )
+
++ Provisioning steps needed
+- patch instance based provisioning
+- configure compute resource
+- add rhel 8 instance
+- add host4.home ssh key to server.example.com
+- add ansible roles
+
+Demo @ UIUC (external auth and stateless boot)
+- provision NFS server 50G
+- satellite client 6 repo
+- push my ssh key to clients (some kind of bug there... look into that later)
+- set default_pxe_item_local to rhel8=over-NFS
+- import custom provisioning template
+- create custom nfs profile
+Settings -> Provisioning -> “Local boot PXELinux template”
+disable build mode
+( 
+  - default_pxe_item_local to rhel8-over-nfs3
+)
+---
+label rhel8-over-nfsv3
+  menu label Install diskless rhel8{} nfsv3{}
+  kernel $vmlinuz
+  append initrd=$initramfs root=nfs:192.168.100.2:/shared:vers=3,rw rw panic=60 ipv6.disable=1 console=tty0 console=ttyS0,115200n8
+<% end -%>
+
+Demo @ NOAA (openscap compliance test)
++- provision instance
+- setup scap policies
+
+
+
+in-place upgrade 
+- convert-to-rhel 
+- use leapp 
+
+----
+other tasks for satellite workshop
+- import and export content
+
+--- 
+- turn on connect by IP (DNS is a mess right now)
+- subscription-manager config --rhsm.manage_repos=1 (WHY NOT IN REGISTRATION SCRIPT?)
+- refresh manifest so that I can sync repos
+- dnf install rhc-worker-playbook
+
+Validate network:
+- remote execution via ssh
+- remote execution via mqtt
+

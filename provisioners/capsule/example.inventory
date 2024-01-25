@@ -1,0 +1,6 @@
+[proxy]
+host4.home
+
+[nodes]
+capsule.home  ansible_user=root
+# satellite.example.com

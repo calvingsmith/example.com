@@ -1,0 +1,132 @@
+---
+# code: language=ansible
+- name: Register to Satellite
+  hosts: "{{ workflow_hosts | default('all') }}"
+  connection: smart
+  gather_facts: true
+  become: true
+  vars_files:
+    - satellite_credentials.yml
+  vars:
+    foreman_user: root
+
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
+
+  tasks:
+    - name: Make sure it's RHEL
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution == "RedHat"
+        fail_msg: "System can not be registered to Satellite"
+        success_msg: "System will be registered"
+
+    - name: Test if system is registered
+      ansible.builtin.command: subscription-manager identity
+      register: registration
+      failed_when: false
+      changed_when:
+        - registration.rc != 0
+      notify: system_is_registered
+
+    - name: Add foreman sshkey to foreman_user
+      ansible.posix.authorized_key:
+        user: "{{ foreman_user }}"
+        state: present
+        key: "https://{{ satellite_url }}:9090/ssh/pubkey"
+
+    # - name: Add hosts to satellite inventory variable
+    #   ansible.builtin.set_stats:
+    #     data:
+    #       workflow_hosts: "{{ ansible_play_hosts }}"
+    #   run_once: true
+
+  handlers:
+    - name: Find org and location id # noqa: args[module]
+      listen: system_is_registered
+      theforeman.foreman.organization_info:
+        name: "{{ satellite_org }}"
+        validate_certs: false
+      register: orgdata
+      delegate_to: localhost
+      become: false
+
+    - name: Write satellite registration
+      listen: system_is_registered
+      ansible.builtin.copy:
+        dest: /root/register.sh
+        content: |
+          #!/bin/bash
+          {{ regcmd.json.registration_command }}
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Extract location id
+      ansible.builtin.set_fact:
+        locdata: "{{ orgdata.organization.locations | selectattr('name', 'eq', satellite_location) | last }}"
+        orgdata: "{{ orgdata.organization }}"
+      listen: system_is_registered
+
+    - name: Debug
+      ansible.builtin.debug:
+        var: tmp
+      vars:
+        tmp:
+          locid: "{{ locdata.id }}"
+          orgid: "{{ orgdata.id }}"
+      listen: system_is_registered
+
+    - name: Validate registration
+      ansible.builtin.assert:
+        that:
+          - locdata and orgdata
+          - "'id' in locdata"
+          - "'id' in orgdata"
+          - locdata.id and orgdata.id
+      listen: system_is_registered
+
+    - name: Extract registration script
+      ansible.builtin.uri:
+        url: "https://{{ satellite_url }}/api/registration_commands"
+        return_content: true
+        body_format: json
+        user: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        method: POST
+        force_basic_auth: true
+        validate_certs: false
+        body:
+          location_id: "{{ locdata.id }}"
+          organization_id: "{{ orgdata.id }}"
+          registration_command:
+            location_id: "{{ locdata.id }}"
+            organization_id: "{{ orgdata.id }}"
+            setup_insights: 1
+            setup_remote_execution: 1
+            jwt_expiration: 1
+            insecure: 1
+            activation_key: "{{ satellite_activation_key }}"
+      register: regcmd
+      delegate_to: localhost
+      listen: system_is_registered
+      become: false
+
+    - debug:
+        var: regcmd.json.registration_command
+      listen: system_is_registered
+
+
+    - name: Clean up old repos
+      file:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/yum.repos.d/dist-rhel-server-7-7Server-x86_64-extras-rpms.repo
+        - /etc/yum.repos.d/dist-rhel-server-7-7Server-x86_64-rpms.repo
+
+    - name: run registration
+      command: /root/register.sh
+      listen: system_is_registered

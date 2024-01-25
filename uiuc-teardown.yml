@@ -1,0 +1,54 @@
+---
+# code: language=ansible
+# Delete NFS server key (locally)
+- name: remove nfs server key
+  hosts: controller
+  # connection: local
+  vars_files:
+    - sat_repos.yml
+
+  tasks:
+  - name: remove nfs server key
+    ansible.builtin.known_hosts:
+      name: "{{ nfs_server }}"
+      state: absent
+
+- name: Setup satellite for provisioning
+  # gather_facts: false
+  hosts: satellite
+  become: yes
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+
+  tasks:  
+  # Delete NFS server
+  - name: delete host
+    redhat.satellite.host:
+      server_url: "{{ satellite_server_url }}"
+      username: "{{ satellite_username }}"
+      password: "{{ satellite_password }}" 
+      name: "{{ nfs_server }}"   
+      state: absent
+
+   # Delete diskless client
+  - name: delete client
+    redhat.satellite.host:
+      server_url: "{{ satellite_server_url }}"
+      username: "{{ satellite_username }}"
+      password: "{{ satellite_password }}" 
+      name: "host1.example.com"   
+      state: absent
+      
+  # Delete old ssh key
+  - name: delete ssh host key
+    ansible.builtin.known_hosts:
+      name: "{{ nfs_server }}"
+      path: "/usr/share/foreman-proxy/.ssh/known_hosts"
+      state: absent
+
+  - name: delete ssh host key (root)
+    known_hosts:
+      name: "{{ nfs_server }}"
+      path: "/root/.ssh/known_hosts"
+      state: absent

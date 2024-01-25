@@ -1,0 +1,128 @@
+---
+# code: language=ansible
+- name: Setup DISA STIG Compliance demo
+  hosts: satellite
+  become: true
+  vars_files:
+    - sat_repos.yml
+
+  tasks:
+    - name: Ensure community.general is installed properly
+      community.general.ansible_galaxy_install:
+        type: collection
+        name: community.general
+        dest: /etc/ansible/collections
+
+    # Collect foreman-proxy ssh key
+    - name: Get satellite ssh key
+      ansible.builtin.fetch:
+        src: /var/lib/foreman-proxy/ssh/id_rsa_foreman_proxy.pub
+        dest: files/satellite_key.pub
+        flat: true
+
+    # See if foreman scap client role is installed
+    - name: Is foreman_scap_client installed?
+      ansible.builtin.command:
+        cmd: hammer --no-headers ansible roles list --search theforeman.foreman_scap_client
+      register: my_output
+      failed_when: "my_output.stderr != ''"
+      changed_when: false
+
+    # Import scap client if needed
+    - name: Import foreman_scap_client if needed
+      ansible.builtin.command:
+        cmd: hammer ansible roles sync --proxy-id 1 --role-names theforeman.foreman_scap_client
+      register: result
+      when: my_output.stdout == ""
+      changed_when: true
+
+    # Run ansible role to configure SCAP policy
+    - name: Run foreman_scap_client ansible role
+    
+    # Create sub host group ( host_parameters are hit or miss )
+    - name: Create STIG host group
+      redhat.satellite.hostgroup:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        name: "stig"
+        parent: "rhel8-server"
+        ansible_roles:
+          - theforeman.foreman_scap_client
+        parameters:
+          - name: remote_execution_ssh_user
+            value: rexuser
+          - name: remote_execution_create_user
+            parameter_type: boolean
+            value: true
+          # - name: remote_execution_effective_user_password
+          #   value: r3dh4t1!
+          - name: package_upgrade
+            parameter_type: boolean
+            value: false
+
+    # Provision compliance server
+    - name: Provision compliance server
+      redhat.satellite.host:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        name: "{{ compliance_server }}"
+        hostgroup: rhel8-server/stig
+        provision_method: image
+        compute_resource: "libvirt hypervisor"
+        image: "rhel-8"
+        build: true
+        location: "{{ satellite_location }}"
+        organization: "{{ satellite_organization }}"
+        state: present
+      register: host_info
+
+    - name: Is host powered on? (would be off if newly provisioned)
+      redhat.satellite.host_power:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        hostname: "{{ compliance_server }}"
+        state: state
+      register: host_state
+
+    - name: Enable build state if new build
+      redhat.satellite.host:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        build: "{{ host_state.power_state is match('off') | string }}"
+        name: "{{ compliance_server }}"
+
+    - name: If machine is down, power on
+      redhat.satellite.host_power:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        hostname: "{{ compliance_server }}"
+        state: true
+      notify: wait_for_build
+
+  handlers:
+    - name: Wait until server build is complete
+      listen: wait_for_build
+      ansible.builtin.command:
+        cmd: hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build
+      register: result
+      until: result.stdout.find("Installed") != -1
+      retries: 30
+      delay: 15
+
+#################
+# - name: Configure Compliance server
+#   hosts: compliance_server
+#   become: yes
+#   gather_facts: no
+
+#   tasks:
+#   - name: fixup root password
+#     ansible.builtin.lineinfile:
+#       path: /shared/etc/shadow
+#       regexp: '^root:'
+#       line: "root:$5$h6TekEQWxRUcbpxM$xXVZxJlhcyoZ0fUxqsdzWwF4mRtUr.lX0.muO8HHkX7:19604:0:99999:7:::"

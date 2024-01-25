@@ -1,0 +1,76 @@
+---
+# code: language=ansible
+
+satellite_infra_workloads:
+  - redhat.satellite.manifest
+  - redhat.satellite.repositories
+
+host_activation_key: "ak-rhel8"
+# satellite_server_url: "https://{{ satellite_server }}"
+satellite_server_url: "https://satellite.example.com/"
+satellite_organization: "Default Organization"
+satellite_location: "Default Location"
+validate_certs: false
+
+# Provisioning
+satellite_manifest_path: "/tmp/manifest.zip"
+libvirt_compute: "libvirt-compute"
+
+# from: https://opendev.org/openstack/tripleo-heat-templates/commit/6dde10a5235c0be3dc0fe305c5bb58f6b8fae697
+# dnf_module_list:
+#    description: List of streams to be configured before updating packages. Each list
+#                 element contains a dictionary with the following values defined
+#                 module[mandatory], stream[mandatory] and profile[optional]. If the profile
+#                 is not specified 'common' will be used instead.
+#    type: json
+dnf_module_list: [{'module':'satellite', 'stream':'el8'}]
+
+satellite_products:
+  - name: Red Hat Enterprise Linux for x86_64
+    repository_sets:
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
+        releasever: 9
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
+        releasever: 9.2
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (Kickstart)
+        releasever: 9.2
+      - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
+        releasever: 9
+      - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
+        releasever: 9.2
+      - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
+        releasever: 9.2
+      - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 (RPMs)
+  - name: Red Hat Enterprise Linux for x86_64
+    repository_sets:
+      - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
+        releasever: 8
+      - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
+        releasever: 8.8
+      - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (Kickstart)
+        releasever: 8.8
+      - name: Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
+        releasever: 8
+      - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
+        releasever: 8.8
+      - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (Kickstart)
+        releasever: 8.8
+      - name: Red Hat Satellite Utils 6.13 for RHEL 8 x86_64 (RPMs)
+      - name: Red Hat Satellite Client 6 for RHEL 8 x86_64 (RPMs)
+  - name: Red Hat Enterprise Linux Server
+    repository_sets:
+      - name: Red Hat Enterprise Linux 7 Server (RPMs)
+        basearch: x86_64
+        releasever: 7Server
+      - name: Red Hat Enterprise Linux 7 Server - Extras (RPMs)
+        basearch: x86_64
+      - name: Red Hat Satellite Client 6 (for RHEL 7 Server) (RPMs)
+        basearch: x86_64
+      - name: Red Hat Satellite Utils 6.11 (for RHEL 7 Server) (RPMs)
+        basearch: x86_64
+  - name: Extra Packages for Enterprise Linux 8
+    repositories:
+      - name: Extra Packages for Enterprise Linux 8 x86_64
+        content_type: yum
+        url: https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/
+        mirror_on_sync: true

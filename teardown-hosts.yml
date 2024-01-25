@@ -1,0 +1,19 @@
+---
+# code: language=ansible
+
+- name: Setup satellite for provisioning
+  # gather_facts: false
+  hosts: 'all'
+  become: yes
+  vars_files:
+    - sat_repos.yml
+
+  tasks:  
+  # Provision client
+  - name: delete host
+    redhat.satellite.host:
+      server_url: "{{ satellite_server_url }}"
+      username: "{{ satellite_username }}"
+      password: "{{ satellite_password }}" 
+      name: "host1.example.com"     
+      state: absent
