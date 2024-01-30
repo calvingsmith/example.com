@@ -27,15 +27,6 @@
       register: result
       changed_when: false
 
-    - name: Enable REX pull on the satellite
-      ansible.builtin.include_role:
-        name: redhat.satellite_operations.installer
-      vars:
-        satellite_installer_scenario: satellite
-        satellite_installer_options:
-          - "--foreman-proxy-plugin-remote-execution-script-mode pull-mqtt"
-      when: (result.stdout | regex_search('mqtt')) is none
-
     - name: Set prefer through registered through Satelliter # noqa: args[module]
       redhat.satellite.setting:
         name: remote_execution_prefer_registered_through_proxy
@@ -133,11 +124,25 @@
     - name: Flush handlers
       ansible.builtin.meta: flush_handlers
 
-    - name: Install REX pull client
-      ansible.builtin.dnf:
-        name: katello-pull-transport-migrate
-        state: present
-      delegate_to: "{{ compliance_server }}"
+    - name: Install REX pull client # noqa: args[module]
+      redhat.satellite.job_invocation:
+        search_query: "name ^ ({{ compliance_server }})"
+        command: 'dnf install -y katello-pull-transport-migrate'
+        job_template: "Run Command - Script Default"
+      register: result
+
+    - name: Debug info
+      ansible.builtin.debug:
+        var: result
+
+    - name: Enable REX pull on the satellite
+      ansible.builtin.include_role:
+        name: redhat.satellite_operations.installer
+      vars:
+        satellite_installer_scenario: satellite
+        satellite_installer_options:
+          - "--foreman-proxy-plugin-remote-execution-script-mode pull-mqtt"
+      # when: (result.stdout | regex_search('mqtt')) is none
 
   handlers:
     - name: Wait until server build is complete

@@ -19,6 +19,9 @@ Demo walkthrough
 
 oscap xccdf generate fix --fix-type ansible --profile content_profile_cis_server_l1 --output remedidation.yml arf-server.example.com-20231106131551.xml 
 
+Some other options:
+- provision STIG vm
+
 
 --- compliance as code  website / redhat as code
 - He uses IDM 
