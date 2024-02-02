@@ -4,17 +4,19 @@
   hosts: satellite
   become: true
   vars_files:
+    - extra_vars.yml
     - sat_repos.yml
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
 
   tasks:
-    - name: Import network boot template
+    - name: Import network boot template  # noqa: args[module]
       redhat.satellite.templates_import:
         repo: https://github.com/calvingsmith/sat-templates.git
         branch: .
         associate: always
-        server_url: "{{ satellite_server_url }}"
-        username: "{{ satellite_username }}"
-        password: "{{ satellite_password }}"
 
     - name: Set network boot template as default
       ansible.builtin.include_role:
@@ -27,14 +29,14 @@
         username: "{{ satellite_username }}"
         password: "{{ satellite_password }}"
 
-    - name: Create nfsroot compute profile
+    - name: Create nfsroot compute profile  # noqa: args[module]
       redhat.satellite.compute_profile:
         name: nfsroot
         compute_attributes:
           - compute_resource: libvirt hypervisor
             vm_attrs:
               cpus: 1
-              memory: 4294967296 # 4 GB
+              memory: 4294967296  # 4 GB
               # virtual (NAT) / example.com network example.com domain
               nics_attributes:
                 0:
@@ -42,11 +44,8 @@
                   network: example.com
                   model: virtio
         state: present
-        server_url: "{{ satellite_server_url }}"
-        username: "{{ satellite_username }}"
-        password: "{{ satellite_password }}"
 
-    - name: Create nfsroot host group
+    - name: Create nfsroot host group  # noqa: args[module]
       redhat.satellite.hostgroup:
         name: "nfsroot"
         organization: "Default Organization"
@@ -61,9 +60,6 @@
         operatingsystem: "RHEL 8.8"
         parameters:
         activation_keys: "{{ host_activation_key }}"
-        server_url: "{{ satellite_server_url }}"
-        username: "{{ satellite_username }}"
-        password: "{{ satellite_password }}"
         state: present
 
     # Install ansible nfs role
@@ -82,13 +78,10 @@
         flat: true
 
     # Provision nfs server
-    - name: Provision NFS server
+    - name: Provision NFS server  # noqa: args[module]
       redhat.satellite.host:
-        server_url: "{{ satellite_server_url }}"
-        username: "{{ satellite_username }}"
-        password: "{{ satellite_password }}"
-        name: "{{ nfs_server }}"
         hostgroup: server
+        name: "{{ nfs_server }}"
         provision_method: image
         compute_resource: libvirt hypervisor
         build: true
@@ -118,37 +111,26 @@
         state: present
       register: host_info
 
-    - name: Is host powered on? (would be off if newly provisioned)
+    - name: Is host powered on? (would be off if newly provisioned)  # noqa: args[module]
       redhat.satellite.host_power:
-        server_url: "{{ satellite_server_url }}"
-        username: "{{ satellite_username }}"
-        password: "{{ satellite_password }}"
         hostname: "{{ nfs_server }}"
         state: state
       register: host_state
 
-    - name: Enable build state if new build
+    - name: Enable build state if new build  # noqa: args[module]
       redhat.satellite.host:
-        server_url: "{{ satellite_server_url }}"
-        username: "{{ satellite_username }}"
-        password: "{{ satellite_password }}"
         build: "{{ host_state.power_state is match('off') | string }}"
         name: "{{ nfs_server }}"
 
-    - name: If machine is down, power on
+    - name: If machine is down, power on  # noqa: args[module]
       redhat.satellite.host_power:
-        server_url: "{{ satellite_server_url }}"
-        username: "{{ satellite_username }}"
-        password: "{{ satellite_password }}"
         hostname: "{{ nfs_server }}"
-        # yamllint disable rule:truthy
         state: on
-        # yamllint disable rule:truthy
       notify: wait_for_build
 
-    - name: Assign role to NFS server
+    - name: Assign role to NFS server  # noqa: args[line-length]
       ansible.builtin.command:
-        cmd: hammer host ansible-roles assign --ansible-roles geerlingguy.nfs --name "{{ nfs_server }}"
+        cmd: "hammer host ansible-roles assign --ansible-roles geerlingguy.nfs --name {{ nfs_server }}"
       register: my_output
       changed_when: my_output.rc != 0
 
@@ -159,7 +141,7 @@
       changed_when: my_output.rc != 0
 
   handlers:
-  # Load ansible nfs role into satellite
+    # Load ansible nfs role into satellite
     - name: Load NFS role into satellite
       listen: load_role
       ansible.builtin.command:
@@ -170,7 +152,7 @@
     - name: Wait until server build is complete
       listen: wait_for_build
       ansible.builtin.command:
-        cmd: hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build
+        cmd: 'hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build'
       register: result
       until: result.stdout.find("Installed") != -1
       retries: 30
@@ -205,7 +187,7 @@
       ansible.builtin.lineinfile:
         path: /shared/etc/shadow
         regexp: '^root:'
-        line: "root:$5$h6TekEQWxRUcbpxM$xXVZxJlhcyoZ0fUxqsdzWwF4mRtUr.lX0.muO8HHkX7:19604:0:99999:7:::"
+        line: "root:$5$h6TekEQWxRUcbpxM$xXVZxJlhcyoZ0fUxqsdzWwF4mRtUr.lX0.muO8HHkX7:19604:0:99999:7:::"  # noqa[yaml[line-length]]
 
     - name: Create some necessary dirs
       ansible.builtin.file:
@@ -235,13 +217,13 @@
         - ['dnf.rwtab', 'etc/rwtab.d/dnf']
         - ['podman.rwtab', 'etc/rwtab.d/podman']
 
-  # - name: Disable ipv6
-  #   ansible.builtin.copy:
-  #     src: ipv6.conf
-  #     dest: /shared/etc/sysctl.d/ipv6.conf
-  #     owner: root
-  #     group: root
-  #     mode: '0644'
+        # - name: Disable ipv6
+        #   ansible.builtin.copy:
+        #     src: ipv6.conf
+        #     dest: /shared/etc/sysctl.d/ipv6.conf
+        #     owner: root
+        #     group: root
+        #     mode: '0644'
 
     - name: Enable readonly root filesystem
       ansible.builtin.lineinfile:
@@ -269,6 +251,11 @@
   gather_facts: true
   vars_files:
     - sat_repos.yml
+    - extra_vars.yml
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
 
   tasks:
     - name: Copy kernel files to correct location on satellite
@@ -283,27 +270,21 @@
         - "/tmp/initramfs*"
 
     # Provision client
-    - name: Provision client
+    - name: Provision client  # noqa: args[module]
       redhat.satellite.host:
-        server_url: "{{ satellite_server_url }}"
-        username: "{{ satellite_username }}"
-        password: "{{ satellite_password }}"
         name: "host1.example.com"
         hostgroup: nfsroot
         provision_method: build
         compute_resource: libvirt hypervisor
-        build: false # OS already on NFS root
+        build: false  # OS already on NFS root
         architecture: x86_64
         operatingsystem: "RHEL 8.8"
         location: "{{ satellite_location }}"
         organization: "{{ satellite_organization }}"
         state: present
 
-    - name: If machine is down, power on
+    - name: If machine is down, power on  # noqa: args[module]
       redhat.satellite.host_power:
-        server_url: "{{ satellite_server_url }}"
-        username: "{{ satellite_username }}"
-        password: "{{ satellite_password }}"
         hostname: "host1.example.com"
         # yamllint disable rule:truthy
         state: on

@@ -1,0 +1,14 @@
+---
+# code: language=ansible
+# Hostname for satellite server
+satellite_server: "satellite.example.com"
+# Username for satellite admin
+satellite_username: "admin"
+# Password for satellite admin account
+satellite_password: ""
+# default password for root user
+default_password: ""
+# Organizational ID from your account.
+org_id: ""
+# Activation key for provisioning
+satellite_activation_key: ""

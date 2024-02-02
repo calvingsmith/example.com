@@ -16,12 +16,13 @@ validate_certs: false
 satellite_manifest_path: "/tmp/manifest.zip"
 libvirt_compute: "libvirt-compute"
 
-# from: https://opendev.org/openstack/tripleo-heat-templates/commit/6dde10a5235c0be3dc0fe305c5bb58f6b8fae697
+# from: https://opendev.org/openstack/tripleo-heat-templates/commit/6dde10a5235c0be3dc0fe305c5bb58f6b8fae697 # noqa: yaml[line-length]
 # dnf_module_list:
-#    description: List of streams to be configured before updating packages. Each list
-#                 element contains a dictionary with the following values defined
-#                 module[mandatory], stream[mandatory] and profile[optional]. If the profile
-#                 is not specified 'common' will be used instead.
+#    description: List of streams to be configured before updating packages. 
+#                 Each list element contains a dictionary with the following
+#                 values definedmodule[mandatory], stream[mandatory] and 
+#                 profile[optional]. If the profileis not specified 'common'
+#                 will be used instead.
 #    type: json
 dnf_module_list: [{'module':'satellite', 'stream':'el8'}]
 

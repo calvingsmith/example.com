@@ -1,16 +1,16 @@
-satellite->arf-server
+satellite->server1
 - Need to switch from ssh to root to ssh to rexuser
 - actually, switch to rex pull
 !! DISABLE EPEL
 -----
 Demo walkthrough
-- review all hosts and arf-server
+- review all hosts and server1
 - review hostgroups
 - validate foreman_scap_client role is attached to arf-server
 - create policy
   - CIS level 1 server (ask in demo)
  * Change STIG hostgroup to CIS
-- apply policy with "run ansible roles"
+- apply policy with "run ansible roles" -> won't work with ansible core
 - run openscap scan
 - show report on satellite
 - download xml file /api/compliance/arf_reports/:id/download 
@@ -22,19 +22,3 @@ oscap xccdf generate fix --fix-type ansible --profile content_profile_cis_server
 Some other options:
 - provision STIG vm
 
-
---- compliance as code  website / redhat as code
-- He uses IDM 
-- Change cockpit URL: https://%{host}:9090
-- intel NUC
-- github.com
-
-------
-New to Red Hat
-- learning as you go.
-- scans monthly ? tenable 
-- yum update 
--- 4-5
-- customers 
-- cloud provider / Fedramp high / service as a platform
-----
