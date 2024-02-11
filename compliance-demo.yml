@@ -3,8 +3,8 @@
 - name: Setup DISA STIG Compliance demo
   hosts: satellite
   become: true
-  vars:
-    - bash_script: true
+  # vars:
+  #   - bash_script: true
   vars_files:
     - extra_vars.yml
     - sat_repos.yml
@@ -104,7 +104,7 @@
 
     - name: Is host powered on? (would be off if newly provisioned) # noqa: args[module]
       redhat.satellite.host_power:
-        hostname: "{{ compliance_server }}"
+        name: "{{ compliance_server }}"
         state: state
       register: host_state
 
@@ -116,8 +116,10 @@
 
     - name: If machine is down, power on  # noqa: args[module]
       redhat.satellite.host_power:
-        hostname: "{{ compliance_server }}"
-        state: on # noqa: yaml[truthy]
+        name: "{{ compliance_server }}"
+        # yamllint disable rule:truthy
+        state: on
+        # yamllint enable rule:truthy
       notify: wait_for_build
 
     - name: Debug info
@@ -146,8 +148,6 @@
 - name: Setup REX pull on client
   hosts: compliance_server
   become: true
-  vars:
-    - bash_script: true
   vars_files:
     - extra_vars.yml
     - sat_repos.yml

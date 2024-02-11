@@ -80,7 +80,7 @@
     # Provision nfs server
     - name: Provision NFS server  # noqa: args[module]
       redhat.satellite.host:
-        hostgroup: server
+        hostgroup: "server"
         name: "{{ nfs_server }}"
         provision_method: image
         compute_resource: libvirt hypervisor
@@ -125,7 +125,9 @@
     - name: If machine is down, power on  # noqa: args[module]
       redhat.satellite.host_power:
         hostname: "{{ nfs_server }}"
+        # yamllint disable rule:truthy
         state: on
+        # yamllint enable rule:truthy
       notify: wait_for_build
 
     - name: Assign role to NFS server  # noqa: args[line-length]
