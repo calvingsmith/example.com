@@ -1,0 +1,5 @@
+---
+ansible_user: root 
+nfs_server: server.example.com
+compliance_server: server1.example.com
+# hypervisor: &hypervisor host4.home

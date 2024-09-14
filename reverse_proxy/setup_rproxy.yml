@@ -1,0 +1,72 @@
+---
+#code language=ansible
+- name: Setup Reverse Proxy
+  hosts: satellite
+  become: true
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+    - setup.yml
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
+
+  tasks:
+    # Provision reverse proxy
+    - name: Provision reverse proxy # noqa: args[module]
+      redhat.satellite.host:
+        name: "{{ server_name }}"
+        hostgroup: rhel8-server
+        provision_method: image
+        compute_resource: "libvirt hypervisor"
+        image: "rhel-8"
+        # build: true
+        location: "{{ satellite_location }}"
+        organization: "{{ satellite_organization }}"
+        state: present
+      register: host_info
+      notify: wait_for_build
+
+    - name: Is host powered on? (would be off if newly provisioned) # noqa: args[module]
+      redhat.satellite.host_power:
+        name: "{{ server_name }}"
+        state: state
+      register: host_state
+
+    - name: Enable build state if new build # noqa: args[module]
+      redhat.satellite.host:
+        build: true
+        name: "{{ server_name }}"
+      when: host_state.power_state is match('off')
+
+    - name: If machine is down, power on  # noqa: args[module]
+      redhat.satellite.host_power:
+        name: "{{ server_name }}"
+        # yamllint disable rule:truthy
+        state: on
+        # yamllint enable rule:truthy
+      notify: wait_for_build
+
+
+  handlers:
+    - name: Wait until server build is complete
+      listen: wait_for_build
+      ansible.builtin.command:
+        cmd: hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build
+      register: result
+      until: result.stdout.find("Installed") != -1
+      retries: 30
+      delay: 15
+
+- name: Setup reverse proxy
+  hosts: server_name
+  become: true
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+
+  tasks:
+    - name: Install nginx
+      ansible.builtin.include_role: 
+        name: ansible-role-nginx

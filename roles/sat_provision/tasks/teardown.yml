@@ -1,0 +1,6 @@
+---
+# code: language=ansible
+- name: Delete host # noqa: args[module]
+  redhat.satellite.host:
+    name: "{{ server_name }}"
+    state: absent

@@ -80,7 +80,7 @@
     # Provision nfs server
     - name: Provision NFS server  # noqa: args[module]
       redhat.satellite.host:
-        hostgroup: "server"
+        hostgroup: "nfsroot"
         name: "{{ nfs_server }}"
         provision_method: image
         compute_resource: libvirt hypervisor
@@ -93,7 +93,7 @@
           - name: remote_execution_ssh_keys
             parameter_type: array
             value:
-              - "{{  }}"
+              - "{{ lookup('file', 'cgs_key.pub')  }}"
           - name: nfs_rpcbind_state
             value: started
           - name: nfs_rpcbind_enabled

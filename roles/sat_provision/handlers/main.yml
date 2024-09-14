@@ -1,0 +1,11 @@
+---
+# code language=ansible
+# handlers file for sat_provision
+- name: Wait until server build is complete
+  listen: wait_for_build
+  ansible.builtin.command:
+    cmd: hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build
+  register: result
+  until: result.stdout.find("Installed") != -1
+  retries: 30
+  delay: 15

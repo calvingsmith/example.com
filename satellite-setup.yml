@@ -13,7 +13,7 @@
 - name: Satellite server pre-install preparations
   hosts: satellite
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   environment:
     LANG: en_US.UTF-8
     LC_ALL: en_US.UTF-8
@@ -137,12 +137,13 @@
       ansible.builtin.include_role:
         name: redhat.satellite_operations.installer
       vars:
-        satellite_installer_scenario: satellite
+        satellite_installer_scenario: satellite # noqa: var-naming[no-role-prefix]
         satellite_installer_options:
           - "--foreman-initial-admin-password {{ sat_pass }}"
           - "--enable-foreman-plugin-remote-execution-cockpit"
           - "--enable-foreman-plugin-openscap"
           - "--enable-foreman-proxy-plugin-openscap"
+          - "--foreman-proxy-dns-forwarders 192.168.1.1"
           #  - "--foreman-proxy-plugin-openscap-puppet-module true"
         satellite_installer_command: satellite-installer
       when:
@@ -321,7 +322,7 @@
       ansible.builtin.include_role:
         name: redhat.satellite.settings
       vars:
-        satellite_settings:
+        satellite_settings:  # noqa: var-naming[no-role-prefix]
           - name: ansible_out_of_sync_disabled
             value: true
 

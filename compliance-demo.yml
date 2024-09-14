@@ -130,7 +130,7 @@
       ansible.builtin.include_role:
         name: redhat.satellite_operations.installer
       vars:
-        satellite_installer_scenario: satellite
+        satellite_installer_scenario: satellite #noqa: args[no-role-prefix]
         satellite_installer_options:
           - "--foreman-proxy-plugin-remote-execution-script-mode pull-mqtt"
       # when: (result.stdout | regex_search('mqtt')) is none

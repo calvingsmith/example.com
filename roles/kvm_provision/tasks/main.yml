@@ -1,50 +1,53 @@
 ---
+# code: language=ansible
 # tasks file for kvm_provision
 - name: Ensure requirements in place
-  package:
+  ansible.builtin.package:
     name:
       - guestfs-tools
       - python3-libvirt
     state: present
-  become: yes
+  become: true
 
 - name: Get VMs list
   community.libvirt.virt:
     command: list_vms
   register: existing_vms
-  changed_when: no
+  changed_when: false
 
 - name: Create VM if not exists
+  when: "vm_name not in existing_vms.list_vms"
   block:
-
     - name: Copy base image to libvirt directory
-      copy:
+      ansible.builtin.copy:
         dest: "{{ libvirt_pool_dir }}/{{ vm_name }}.qcow2"
         src: "{{ base_image_dir }}/{{ base_image_name }}"
-        force: no
-        remote_src: yes 
-        mode: 0660
-      register: copy_results 
+        force: true
+        remote_src: true
+        mode: "0660"
+      register: copy_results
 
     - name: Configure the image
-      command: |
+      ansible.builtin.command: |
         virt-customize -a {{ libvirt_pool_dir }}/{{ vm_name }}.qcow2 \
         --hostname {{ vm_name }} \
         --root-password password:{{ vm_root_pass }} \
         --ssh-inject 'root:string:{{ ssh_key }}' \
         --uninstall cloud-init
+      changed_when: true
       when: copy_results is changed
 
-    - name: resize drive
-      command: |
+    - name: Resize drive
+      ansible.builtin.command: |
         qemu-img resize {{ libvirt_pool_dir }}/{{ vm_name }}.qcow2 \
         {{ vm_size }}
-        
+      register: my_output
+      changed_when: my_output.rc != 0
+
     - name: Define vm
       community.libvirt.virt:
         command: define
         xml: "{{ lookup('template', 'vm-template.xml.j2') }}"
-  when: "vm_name not in existing_vms.list_vms"
 
 - name: Ensure VM is started
   community.libvirt.virt:
