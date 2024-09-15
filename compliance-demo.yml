@@ -130,8 +130,9 @@
       ansible.builtin.include_role:
         name: redhat.satellite_operations.installer
       vars:
-        satellite_installer_scenario: satellite #noqa: args[no-role-prefix]
-        satellite_installer_options:
+        satellite_installer_scenario: # noqa: args[no-role-prefix]
+          - "satellite"
+        satellite_installer_options: # noqa: args[no-role-prefix]
           - "--foreman-proxy-plugin-remote-execution-script-mode pull-mqtt"
       # when: (result.stdout | regex_search('mqtt')) is none
 
@@ -140,6 +141,7 @@
       listen: wait_for_build
       ansible.builtin.command:
         cmd: hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build
+      changed_when: false
       register: result
       until: result.stdout.find("Installed") != -1
       retries: 30

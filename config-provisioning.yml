@@ -34,8 +34,8 @@
       ansible.builtin.user:
         name: foreman
         generate_ssh_key: true
-        ssh_key_file: .ssh/id_rsa
-      register: ssh_key
+        kvm_provision_ssh_key_file: .ssh/id_rsa
+      register: kvm_provision_ssh_key
 
     - name: SSH public key Install
       ansible.posix.authorized_key:
@@ -108,7 +108,7 @@
       ansible.builtin.include_role:
         name: redhat.satellite.settings
       vars:
-        satellite_settings:
+        satellite_settings: # noqa: args[no-role-prefix]
           - name: destroy_vm_on_host_delete
             value: true
           - name: root_pass

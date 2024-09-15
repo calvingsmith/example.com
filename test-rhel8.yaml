@@ -8,7 +8,7 @@
   vars_files:
     - extra_vars.yml
   vars:
-    pool_dir: "{{ libvirt_pool_dir }}"
+    pool_dir: "{{ kvm_provision_libvirt_pool_dir }}"
     vm: test-rhel8
     vcpus: 2
     ram_mb: 12288
@@ -21,9 +21,9 @@
       ansible.builtin.include_role:
         name: kvm_provision
       vars:
-        vm_name: "{{ vm }}"
-        vm_vcpus: "{{ vcpus }}"
-        vm_ram_mb: "{{ ram_mb }}"
-        vm_net: "{{ net }}"
-        cleanup_tmp: "{{ cleanup }}"
-        ssh_key: "{{ ssh_pub_key }}"
+        kvm_provision_vm_name: "{{ vm }}"
+        kvm_provision_vm_vcpus: "{{ vcpus }}"
+        kvm_provision_vm_ram_mb: "{{ ram_mb }}"
+        kvm_provision_vm_net: "{{ net }}"
+        kvm_provision_cleanup_tmp: "{{ cleanup }}"
+        kvm_provision_ssh_key: "{{ ssh_pub_key }}"

@@ -1,5 +1,5 @@
 ---
-#code language=ansible
+# code language=ansible
 - name: Setup Reverse Proxy
   hosts: satellite
   become: true
@@ -54,6 +54,7 @@
       listen: wait_for_build
       ansible.builtin.command:
         cmd: hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build
+      changed_when: false
       register: result
       until: result.stdout.find("Installed") != -1
       retries: 30
@@ -68,5 +69,5 @@
 
   tasks:
     - name: Install nginx
-      ansible.builtin.include_role: 
+      ansible.builtin.include_role:
         name: ansible-role-nginx

@@ -1,12 +1,12 @@
 <domain type="kvm">
-  <name>{{ vm_name }}</name>
+  <name>{{ kvm_provision_vm_name }}</name>
   <metadata>
     <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
       <libosinfo:os id="http://redhat.com/rhel/8.8"/>
     </libosinfo:libosinfo>
   </metadata>
-  <memory unit="MiB">{{ vm_ram_mb }}</memory>
-  <vcpu placement="static">{{ vm_vcpus }}</vcpu>
+  <memory unit="MiB">{{ kvm_provision_vm_ram_mb }}</memory>
+  <vcpu placement="static">{{ kvm_provision_vm_vcpus }}</vcpu>
   <resource>
     <partition>/machine</partition>
   </resource>
@@ -35,17 +35,17 @@
     <emulator>/usr/libexec/qemu-kvm</emulator>
     <disk type="file" device="disk">
       <driver name="qemu" type="qcow2" discard="unmap"/>
-      <source file="{{ pool_dir }}/{{ vm_name }}.qcow2"/>
+      <source file="{{ pool_dir }}/{{ kvm_provision_vm_name }}.qcow2"/>
       <backingStore type='file' index='3'>
         <format type='qcow2'/>
-        <source file="{{ base_image_dir }}/{{ base_image_name }}"/>
+        <source file="{{ kvm_provision_base_image_dir }}/{{ kvm_provision_base_image_name }}"/>
         <backingStore/>
       </backingStore>
       <target dev="sda" bus="scsi"/>
       <address type="drive" controller="0" bus="0" target="0" unit="0"/>
     </disk>
     <interface type="network">
-      <source network="{{ vm_net }}"/>
+      <source network="{{ kvm_provision_vm_net }}"/>
       <model type="virtio"/>
       <address type="pci" domain="0x0000" bus="0x07" slot="0x00" function="0x0"/>
     </interface>
