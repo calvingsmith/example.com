@@ -1,0 +1,125 @@
+---
+- name: Provision idm server (if necessary)
+  hosts: satellite
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
+
+  tasks:
+    - name: Setup activationkey # noqa: args[module]
+      redhat.satellite.activation_key:
+        name: "{{ host_activation_key_9 }}"
+        lifecycle_environment: "Library"
+        content_view: "Default Organization View"
+        state: present
+        organization: "{{ satellite_organization }}"
+
+    # Set up host group "hosts"  (test)
+    - name: RHEL 9 host group # noqa: args[module]
+      redhat.satellite.hostgroup:
+        name: "rhel9-server"
+        organization: "Default Organization"
+
+    - name: Provision IDM server # noqa: args[module]
+      redhat.satellite.host:
+        name: "{{ idm_server }}"
+        hostgroup: rhel9-server
+        provision_method: image
+        compute_resource: "libvirt hypervisor"
+        image: "rhel-9.3"
+        location: "{{ satellite_location }}"
+        organization: "{{ satellite_organization }}"
+        state: present
+      register: host_info
+      notify: wait_for_build
+
+    - name: Is host powered on? (would be off if newly provisioned) # noqa: args[module]
+      redhat.satellite.host_power:
+        name: "{{ idm_server }}"
+        state: state
+      register: host_state
+
+    - name: Enable build state if new build # noqa: args[module]
+      redhat.satellite.host:
+        build: true
+        name: "{{ idm_server }}"
+      when: host_state.power_state is match('off')
+
+    - name: If machine is down, power on  # noqa: args[module]
+      redhat.satellite.host_power:
+        name: "{{ idm_server }}"
+        # yamllint disable rule:truthy
+        state: on
+        # yamllint enable rule:truthy
+      notify: wait_for_build
+
+  handlers:
+    - name: Wait until server build is complete
+      listen: wait_for_build
+      ansible.builtin.command:
+        cmd: hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build
+      changed_when: false
+      register: result
+      until: result.stdout.find("Installed") != -1
+      retries: 30
+      delay: 15
+
+
+- name: Playbook to configure IPA server
+  hosts: idm_server
+  become: true
+  vars_files:
+    - extra_vars.yml
+  vars:
+    ipaserver_domain: example.com
+    ipaserver_realm: EXAMPLE.COM
+    ipaadmin_password: "{{ default_password }}"
+    ipadm_password: "{{ default_password }}"
+
+  pre_tasks:
+    - name: Replace a localhost entry searching for a literal string to avoid escaping
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        search_string: '127.0.0.1'
+        line: 127.0.0.1 localhost
+        owner: root
+        group: root
+        mode: '0644'
+
+  roles:
+    - role: redhat.rhel_idm.ipaserver
+      state: present # noqa: var-naming[no-role-prefix]
+
+- name: Register satellite server to IDM
+  hosts: satellite
+  vars:
+    ipaclient_configure_dns_resolver: true
+    ipaclient_domain: "example.com"
+    ipaclient_dns_servers: 192.168.100.2
+    ipaadmin_password: "{{ default_password }}"
+    ipadm_password: "{{ default_password }}"
+
+  pre_tasks:
+    - name: Install ipa client
+      ansible.builtin.dnf:
+        name: ipa-client
+        state: present
+        disable_plugin:
+          - foreman-protector
+
+    - name: Add idm server to /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ hostvars['idm_server'].ansible_all_ipv4_addresses[0] }}  {{ hostvars['idm_server'].ansible_fqdn }} # IDM server"
+        owner: root
+        group: root
+        mode: '0644'
+
+  roles:
+    - role: redhat.rhel_idm.ipaclient
+      state: present # noqa: var-naming[no-role-prefix]

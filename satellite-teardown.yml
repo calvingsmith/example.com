@@ -11,8 +11,5 @@
         name: "{{ nfs_server }}"
         state: absent
 
-    - name: Delete satellite server
-      
-
-  # - name: delete satellite server
-  #   ansible.builtin
+  #  - name: Delete satellite server
+  # FIXME

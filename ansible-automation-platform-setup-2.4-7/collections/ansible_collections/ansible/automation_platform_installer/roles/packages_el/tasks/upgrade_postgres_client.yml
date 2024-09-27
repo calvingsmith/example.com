@@ -1,0 +1,13 @@
+---
+- name: Uninstall PostgreSQL 12 Client
+  shell: |
+    dnf module -y reset 'postgresql'
+
+- name: Enable PostgreSQL 13 dnf modules
+  shell: |
+    dnf module -y enable 'postgresql:13'
+
+- name: Install PostgreSQL Client
+  dnf:
+    name: postgresql
+    state: latest

@@ -85,7 +85,7 @@
       ansible.builtin.include_role:
         name: redhat.satellite.settings
       vars:
-        satellite_settings:
+        satellite_settings: # noqa: var-naming[no-role-prefix]
           - name: destroy_vm_on_host_delete
             value: true
 

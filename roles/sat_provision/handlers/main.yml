@@ -6,6 +6,7 @@
   ansible.builtin.command:
     cmd: hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build
   register: result
+  changed_when: false
   until: result.stdout.find("Installed") != -1
   retries: 30
   delay: 15

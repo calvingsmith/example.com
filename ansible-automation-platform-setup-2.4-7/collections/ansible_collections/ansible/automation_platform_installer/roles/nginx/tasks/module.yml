@@ -1,0 +1,16 @@
+---
+- name: Reset and enable nginx module stream
+  when: not (ansible_distribution_major_version == "9" and ansible_distribution_version is version_compare('9.2', '<'))
+  block:
+    - name: Disable Nginx module
+      command: dnf module -y reset nginx
+
+    - name: Enable nginx module
+      block:
+        - name: Enable Nginx {{ nginx_version }}
+          command: "dnf module -y enable nginx:{{ nginx_version }}"
+      rescue:
+        - name: Enable Nginx module (legacy)
+          command: "dnf module -y enable nginx:{{ nginx_fallback_version }}"
+          when: ansible_distribution_major_version | int == 8
+...

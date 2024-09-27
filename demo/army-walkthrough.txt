@@ -1,0 +1,30 @@
+- show_unsupported_templates = no
+
+- discovery
+-- provision VM using host4.Home
+-- MAKE SURE TO CHANGE NETWORK
+-- URL https://satellite.example.com
+
+Next, we would like to see the following:
+
+Custom kickstart creation
+How to call it when kickstarting from physical media or installation .iso
+How to call AAP API to kick off playbook and workflows following provisioning
+Further exploration of the custom ruby (When, where, and how to use, time permitting)
+
+
+Log in as admin
+adam in operations and huntsville
+brenda in finance and bradford
+operations org has dev and qa
+finance has prod 
+
+----
+Log in as admin and review configuration
+Show organizations
+- organizations can have access to different content/lce's and content views
+cv's and lc's are attached to organization
+Locations
+LCE
+content views
+Host Groups

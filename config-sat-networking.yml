@@ -13,7 +13,7 @@
       ansible.builtin.include_role:
         name: redhat.satellite_operations.installer
       vars:
-        satellite_installer_scenario: satellite
+        satellite_installer_scenario: satellite # noqa: var-naming[no-role-prefix]
         satellite_installer_options:
           - "--foreman-proxy-dns true"
           - "--foreman-proxy-dns-managed true"
@@ -66,7 +66,7 @@
   #      satellite_server_url: "{{ satellite_server_url }}"
   #      satellite_username: "{{ satellite_username }}"
   #      satellite_password: "{{ satellite_password }}"
-        satellite_subnets:
+        satellite_subnets: # noqa: var-naming[no-role-prefix]
           - name: "Example network"
             network: "192.168.100.0"
             mask: "255.255.255.0"

@@ -1,0 +1,99 @@
+---
+# code: language=ansible
+- name: Delete compliance demo
+  # gather_facts: false
+  hosts: satellite
+  become: true
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+
+  tasks:
+    - name: Reset prefer through registered through Satellite
+      redhat.satellite.setting:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        name: remote_execution_prefer_registered_through_proxy
+        value: false
+
+    # Delete compliance server
+    - name: Delete host
+      redhat.satellite.host:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        name: "{{ compliance_server }}"
+        state: absent
+
+    - name: Delete stig hostgroup
+      redhat.satellite.hostgroup:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        name: "stig"
+        parent: "rhel8-server"
+        state: absent
+
+    # See if foreman scap client role is installed
+    - name: Is foreman_scap_client installed?
+      ansible.builtin.command:
+        cmd: hammer --no-headers ansible roles list --search theforeman.foreman_scap_client
+      register: my_output
+      failed_when: "my_output.stderr != ''"
+      changed_when: false
+
+    - name: Delete foreman_scap_client ansible role
+      ansible.builtin.command:
+        cmd: hammer ansible roles delete --name theforeman.foreman_scap_client
+      register: my_output
+      ignore_errors: true
+      changed_when: my_output.rc == 0
+
+    - name: Delete STIG job template
+      redhat.satellite.job_template:
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        name: "Apply STIG profile"
+        state: absent
+
+    # Delete old ssh key
+    - name: Delete ssh host key
+      ansible.builtin.known_hosts:
+        name: "{{ compliance_server }}"
+        path: "/usr/share/foreman-proxy/.ssh/known_hosts"
+        state: absent
+
+    - name: Disable REX pull on the satellite # noqa: args[no-role-prefix]
+      ansible.builtin.include_role:
+        name: redhat.satellite_operations.installer
+      vars:
+        satellite_installer_scenario: satellite # noqa: var-naming[no-role-prefix]
+        satellite_installer_options:
+          - "--reset-foreman-proxy-plugin-remote-execution-script-mode"
+
+# Delete NFS server key (locally)
+- name: Cleanup Controller
+  hosts: controller
+  # connection: local
+
+  tasks:
+    - name: Remove server key
+      ansible.builtin.known_hosts:
+        name: "{{ compliance_server }}"
+        state: absent
+
+    - name: Delete artifacts from file directory
+      ansible.builtin.file:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - "satellite_key.pub"
+        - "rhel"
+
+    - name: Delete ssh host key (root)
+      ansible.builtin.known_hosts:
+        name: "{{ compliance_server }}"
+        path: "/root/.ssh/known_hosts"
+        state: absent

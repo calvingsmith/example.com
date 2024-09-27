@@ -5,6 +5,8 @@
 		}
 	],
 	"settings": {
-		"ansible.python.interpreterPath": "/bin/python"
+		"ansible.python.interpreterPath": "/bin/python",
+		"notebook.defaultFormatter": "redhat.ansible",
+		"ansible.playbook.arguments": "-i inventory/hosts.ini -e @vars/extra_vars.yml -e @vars/sat_repos.yml"
 	}
 }

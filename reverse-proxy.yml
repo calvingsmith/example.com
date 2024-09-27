@@ -15,7 +15,7 @@
   tasks:
     - name: Provision server
       ansible.builtin.include_role:
-        name: sat_provision
+        name: sat_provision # noqa var-naming[no-role-prefix]
       vars:
         server_name: "rproxy.example.com"
 

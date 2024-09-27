@@ -1,7 +1,0 @@
-- provision compliance host
-- need to install community.general into /etc/ansible/collections
-- switch to non-root login (rexuser:wheel)
-- install foreman-proxy key (Will I still need pwd)
-- fapolicyd breaks rex
- - 
-

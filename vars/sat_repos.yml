@@ -5,7 +5,11 @@ satellite_infra_workloads:
   - redhat.satellite.manifest
   - redhat.satellite.repositories
 
-host_activation_key: "ak-rhel8"
+host_activation_key_8: "ak-rhel8"
+satellite_client_repo_8: "satellite-client-6-for-rhel-8-x86_64-rpms"
+host_activation_key_9: "ak-rhel9"
+satellite_client_repo_9: "satellite-client-6-for-rhel-9-x86_64-rpms"
+
 # satellite_server_url: "https://{{ satellite_server }}"
 satellite_server_url: "https://satellite.example.com/"
 satellite_organization: "Default Organization"
@@ -35,12 +39,14 @@ satellite_products:
         releasever: 9.2
       - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (Kickstart)
         releasever: 9.2
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (Kickstart)
+        releasever: 9.3
       - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
         releasever: 9
       - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
         releasever: 9.2
       - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
-        releasever: 9.2
+        releasever: 9.3
       - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 (RPMs)
   - name: Red Hat Enterprise Linux for x86_64
     repository_sets:
@@ -53,22 +59,10 @@ satellite_products:
       - name: Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
         releasever: 8
       - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
-        releasever: 8.8
+        releasever: 8.9
       - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (Kickstart)
-        releasever: 8.8
-      - name: Red Hat Satellite Utils 6.13 for RHEL 8 x86_64 (RPMs)
+        releasever: 8.9
       - name: Red Hat Satellite Client 6 for RHEL 8 x86_64 (RPMs)
-  - name: Red Hat Enterprise Linux Server
-    repository_sets:
-      - name: Red Hat Enterprise Linux 7 Server (RPMs)
-        basearch: x86_64
-        releasever: 7Server
-      - name: Red Hat Enterprise Linux 7 Server - Extras (RPMs)
-        basearch: x86_64
-      - name: Red Hat Satellite Client 6 (for RHEL 7 Server) (RPMs)
-        basearch: x86_64
-      - name: Red Hat Satellite Utils 6.11 (for RHEL 7 Server) (RPMs)
-        basearch: x86_64
   - name: Extra Packages for Enterprise Linux 8
     repositories:
       - name: Extra Packages for Enterprise Linux 8 x86_64
