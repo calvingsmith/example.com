@@ -7,7 +7,7 @@
       - guestfs-tools
       - python3-libvirt
     state: present
-  become: true
+  # become: true
 
 - name: Get VMs list
   community.libvirt.virt:
@@ -15,30 +15,65 @@
   register: existing_vms
   changed_when: false
 
+- name: Setup network
+  community.libvirt.virt_net:
+    command: modify
+    name: devel.net
+    xml: "<host mac='{{ kvm_provision_vm_mac }}' name='{{ kvm_provision_vm_name }}' ip='{{ kvm_provision_ip_addr }}'/>"
+  # ignore_errors: true
+
 - name: Create VM if not exists
   when: "kvm_provision_vm_name not in existing_vms.list_vms"
   block:
+    - name: Create temporary image
+      ansible.builtin.tempfile:
+        state: file
+        suffix: .qcow2
+      register: temp_vm
+
     - name: Copy base image to libvirt directory
       ansible.builtin.copy:
-        dest: "{{ kvm_provision_libvirt_pool_dir }}/{{ kvm_provision_vm_name }}.qcow2"
+        dest: "{{ temp_vm.path }}"
         src: "{{ kvm_provision_base_image_dir }}/{{ kvm_provision_base_image_name }}"
         force: true
         remote_src: true
         mode: "0660"
       notify: Configure the image
 
-
     - name: Resize drive
       ansible.builtin.command: |
-        qemu-img resize {{ kvm_provision_libvirt_pool_dir }}/{{ kvm_provision_vm_name }}.qcow2 \
-        {{ kvm_provision_vm_size }}
+        qemu-img resize {{ temp_vm.path }} {{ kvm_provision_vm_size }}
       register: my_output
-      changed_when: my_output.rc != 0
+      failed_when: my_output.rc != 0
+      changed_when: true
+
+    - name: Create vm disk image from tempfile
+      ansible.builtin.copy:
+        src: "{{ temp_vm.path }}"
+        dest: "{{ kvm_provision_libvirt_pool_dir }}/{{ kvm_provision_vm_name }}.qcow2"
+        mode: "0660"
+        remote_src: true
+
+    - name: Resize partition
+      ansible.builtin.command: |
+        virt-resize --expand {{ kvm_provision_root_partition }} {{ temp_vm.path }} \
+        {{ kvm_provision_libvirt_pool_dir }}/{{ kvm_provision_vm_name }}.qcow2
+      register: my_output
+      failed_when: my_output.rc != 0
+      changed_when: true
+
+    - name: Delete temp_vm
+      ansible.builtin.file:
+        name: "{{ temp_vm.path }}"
+        state: absent
 
     - name: Define vm
       community.libvirt.virt:
         command: define
         xml: "{{ lookup('template', 'vm-template.xml.j2') }}"
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
 
 - name: Ensure VM is started
   community.libvirt.virt:
@@ -48,3 +83,9 @@
   until: "vm_start_results is success"
   retries: 15
   delay: 2
+
+- name: Make sure ssh is up
+  ansible.builtin.wait_for:
+    port: 22
+    host: '{{ kvm_provision_ip_addr }}'
+    search_regex: OpenSSH

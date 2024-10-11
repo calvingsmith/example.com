@@ -51,14 +51,14 @@
       delegate_to: "root@host4.home"
 
     - name: Collect ssh keys from host4.home
-      ansible.builtin.command: "ssh-keyscan 192.168.100.1"
+      ansible.builtin.command: "ssh-keyscan {{ libvirt_compute }}"
       register: "host_keys"
       changed_when: false
 
     - name: Copy over known_hosts key
       ansible.builtin.known_hosts:
         path: /usr/share/foreman/.ssh/known_hosts
-        name: 192.168.100.1
+        name: {{ libvirt_compute }}
         key: "{{ host_keys.stdout }}"
 
     - name: Fixup permissions for known_hosts file
@@ -73,7 +73,7 @@
         name: libvirt hypervisor
         provider: libvirt
         provider_params:
-          url: qemu+ssh://root@192.168.100.1/system
+          url: "qemu+ssh://root@{{ libvirt_compute }}/system"
           set_console_password: false
 
     - name: Create compute item.profile # noqa: args[module]

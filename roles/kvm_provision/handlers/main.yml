@@ -1,4 +1,6 @@
 - name: Configure the image
+  environment:
+    LIBGUESTFS_BACKEND: "direct"
   ansible.builtin.command: |
     virt-customize -a {{ kvm_provision_libvirt_pool_dir }}/{{ kvm_provision_vm_name }}.qcow2 \
     --hostname {{ kvm_provision_vm_name }} \

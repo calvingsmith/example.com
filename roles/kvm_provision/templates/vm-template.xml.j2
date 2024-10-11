@@ -35,7 +35,7 @@
     <emulator>/usr/libexec/qemu-kvm</emulator>
     <disk type="file" device="disk">
       <driver name="qemu" type="qcow2" discard="unmap"/>
-      <source file="{{ pool_dir }}/{{ kvm_provision_vm_name }}.qcow2"/>
+      <source file="{{ kvm_provision_libvirt_pool_dir }}/{{ kvm_provision_vm_name }}.qcow2"/>
       <backingStore type='file' index='3'>
         <format type='qcow2'/>
         <source file="{{ kvm_provision_base_image_dir }}/{{ kvm_provision_base_image_name }}"/>
@@ -45,6 +45,7 @@
       <address type="drive" controller="0" bus="0" target="0" unit="0"/>
     </disk>
     <interface type="network">
+      <mac address="{{ kvm_provision_vm_mac }}"/>
       <source network="{{ kvm_provision_vm_net }}"/>
       <model type="virtio"/>
       <address type="pci" domain="0x0000" bus="0x07" slot="0x00" function="0x0"/>

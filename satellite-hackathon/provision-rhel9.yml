@@ -1,0 +1,72 @@
+---
+# code: language=ansible
+# Provision cloud instance on libvirt environment
+- name: Deploys VM based on cloud image
+  hosts: hypervisor
+  # gather_facts: true
+  become: true
+  remote_user: root
+  vars_files:
+    - extra_vars.yml
+    - vm_details.yml
+
+  tasks:
+    - name: Provision virtual machine
+      ansible.builtin.include_role:
+        name: 'kvm_provision'
+      vars:
+        kvm_provision_base_image_name: "{{ base_image_name }}"
+        kvm_provision_vm_name: "{{ vm }}"
+        kvm_provision_vm_net: "{{ net }}"
+        kvm_provision_vm_mac: "{{ mac }}"
+        kvm_provision_vm_vcpus: "{{ vcpus }}"
+        kvm_provision_vm_ram_mb: "{{ ram_mb }}"
+        kvm_provision_ip_addr: "{{ ip_address }}"
+        kvm_provision_cleanup_tmp: "{{ cleanup }}"
+        kvm_provision_ssh_key: "{{ ssh_pub_key }}"
+        kvm_provision_vm_size: "200G"
+
+- name: Configure VM
+  hosts: satellite-16
+  vars_files:
+    - extra_vars.yml
+    - vm_details.yml
+
+  tasks:
+    - name: Point DNS to self
+      ansible.builtin.include_role:
+        name: linux-system-roles.network
+      vars:
+        network_connections:
+          - name: eth0
+            type: ethernet
+            state: up
+            ip:
+              gateway4: "{{ gateway }}"
+              address:
+                - "192.168.50.2/24"
+              dns:
+                - "192.168.50.1"
+              dns_search:
+                - "devel.net"
+
+    - name: Subscription manager - register system
+      community.general.redhat_subscription:
+        server_hostname: "subscription.rhsm.redhat.com"
+        server_insecure: 0
+        server_prefix: /subscription
+        server_port: 443
+        rhsm_baseurl: https://cdn.redhat.com
+        force_register: true
+        state: present
+        activationkey: "{{ satellite_activation_key }}"
+        org_id: "{{ org_id }}"
+      # ignore_errors: true
+
+    - name: Installer repos
+      community.general.rhsm_repository:
+        name:
+          - rhel-9-for-x86_64-baseos-rpms
+          - rhel-9-for-x86_64-appstream-rpms
+        state: enabled
+        purge: true

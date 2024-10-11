@@ -2,7 +2,7 @@
 # code: language=ansible
 # Provision cloud instance on libvirt environment
 - name: Deploys VM based on cloud image
-  hosts: host4.home
+  hosts: hypervisor
   gather_facts: true
   become: true
   vars_files:

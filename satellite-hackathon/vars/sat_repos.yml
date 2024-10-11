@@ -11,7 +11,7 @@ host_activation_key_9: "ak-rhel9"
 satellite_client_repo_9: "satellite-client-6-for-rhel-9-x86_64-rpms"
 
 # satellite_server_url: "https://{{ satellite_server }}"
-satellite_server_url: "https://satellite.devel.net/"
+satellite_server_url: "https://satellite.{{ satellite_domain }}/"
 satellite_organization: "Default Organization"
 satellite_location: "Default Location"
 validate_certs: false

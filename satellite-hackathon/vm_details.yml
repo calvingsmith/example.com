@@ -1,5 +1,4 @@
-pool_dir: "{{ kvm_provision_libvirt_pool_dir }}"
-vm: satellite-16.devel.net
+vm: satellite.devel.net
 vcpus: 4
 ram_mb: 20480
 cleanup: false

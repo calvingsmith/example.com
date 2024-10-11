@@ -11,7 +11,7 @@
 #     community.libvirt.virt:
 
 - name: Satellite server pre-install preparations
-  hosts: satellite
+  hosts: satellite-16
   become: true
   become_method: ansible.builtin.sudo
   environment:
@@ -41,64 +41,48 @@
     #    tags:
     #      - pre_task
 
-    - name: Configure product-id.conf
+    # - name: Configure product-id.conf
+    #   ansible.builtin.copy:
+    #     dest: /etc/yum/pluginconf.d/product-id.conf
+    #     content: |
+    #       [main]
+    #       enabled=1`
+    #     owner: root
+    #     group: root
+    #     mode: '0644'
+    #   tags:
+    #     - pre_task
+
+
+    # - name: Enable appstream modules
+    #   ansible.builtin.command: |
+    #     dnf module enable -y {{ item.module }}:{{ item.stream }}/{{ item.profile | default('common') }}
+    #   register: result
+    #   changed_when:
+    #     - '"Enabling module streams" in result.stdout'
+    #   loop: "{{ dnf_module_list | list }}"
+    #   when:
+    #     - ansible_distribution_major_version >= '8'
+    #     - dnf_module_list | length > 0
+
+    - name: Create Sat 6.16 repo
       ansible.builtin.copy:
-        dest: /etc/yum/pluginconf.d/product-id.conf
         content: |
-          [main]
-          enabled=1`
+                  [Satellite_Engineering_Satellite_6_16_Composes_Satellite_6_16_RHEL9]
+                  name="Satellite_Engineering_Satellite_6_16_Composes_Satellite_6_16_RHEL9"
+                  baseurl="http://192.168.1.100/Satellite_Engineering_Satellite_6_16_Composes_Satellite_6_16_RHEL9/"
+                  gpgcheck = false
+                  enabled = true
+
+                  [Satellite_Engineering_Satellite_6_16_Composes_Satellite_Maintenance_6_16_RHEL9]
+                  name="Satellite_Engineering_Satellite_6_16_Composes_Satellite_Maintenance_6_16_RHEL9"
+                  baseurl="http://192.168.1.100/Satellite_Engineering_Satellite_6_16_Composes_Satellite_Maintenance_6_16_RHEL9/"
+                  gpgcheck = false
+                  enabled = true
+        dest: "/etc/yum.repos.d/sat-devel.repo"
         owner: root
         group: root
         mode: '0644'
-      tags:
-        - pre_task
-
-    - name: Subscription manager - register system
-      community.general.redhat_subscription:
-        server_hostname: "subscription.rhsm.redhat.com"
-        server_insecure: 0
-        server_prefix: /subscription
-        server_port: 443
-        rhsm_baseurl: https://cdn.redhat.com
-        state: present
-        force_register: true
-        activationkey: "{{ satellite_activation_key }}"
-        org_id: "{{ org_id }}"
-        # pool: '^Red Hat Satellite Infrastructure^$'
-      tags:
-        - pre_task
-
-    - name: Enable repositories
-      ansible.builtin.lineinfile:
-        path: /etc/rhsm/rhsm.conf
-        regexp: '^manage_repos ='
-        line: manage_repos = 1
-      tags:
-        - pre_task
-
-    - name: Installer repos
-      community.general.rhsm_repository:
-        name:
-          - rhel-8-for-x86_64-baseos-rpms
-          - rhel-8-for-x86_64-appstream-rpms
-          - satellite-6.13-for-rhel-8-x86_64-rpms
-          - satellite-maintenance-6.13-for-rhel-8-x86_64-rpms
-          - ansible-2.9-for-rhel-8-x86_64-rpms
-        state: enabled
-        purge: true
-      tags:
-        - pre_task
-
-    - name: Enable appstream modules
-      ansible.builtin.command: |
-        dnf module enable -y {{ item.module }}:{{ item.stream }}/{{ item.profile | default('common') }}
-      register: result
-      changed_when:
-        - '"Enabling module streams" in result.stdout'
-      loop: "{{ dnf_module_list | list }}"
-      when:
-        - ansible_distribution_major_version >= '8'
-        - dnf_module_list | length > 0
 
     - name: Update all packages
       ansible.builtin.dnf:
@@ -120,9 +104,9 @@
       tags:
         - software
 
-    - name: Set sat_pass
+    - name: Set satellite_password
       ansible.builtin.set_fact:
-        sat_pass: "{{ satellite_password }}"
+        satellite_password: "{{ satellite_password }}"
       tags:
         - software
 
@@ -139,7 +123,7 @@
       vars:
         satellite_installer_scenario: satellite # noqa: var-naming[no-role-prefix]
         satellite_installer_options:
-          - "--foreman-initial-admin-password {{ sat_pass }}"
+          - "--foreman-initial-admin-password {{ satellite_password }}"
           - "--enable-foreman-plugin-remote-execution-cockpit"
           - "--enable-foreman-plugin-openscap"
           - "--enable-foreman-proxy-plugin-openscap"
@@ -161,18 +145,18 @@
       tags:
         - post_software
 
-    - name: Refresh manifest
-      redhat.satellite.subscription_manifest:
-        organization: "{{ satellite_organization }}"
-        state: refreshed
-        server_url: "{{ satellite_server_url }}"
-        username: "{{ satellite_username }}"
-        password: "{{ sat_pass }}"
-        validate_certs: false
-      async: 2000
-      poll: 60
-      tags:
-        - post_software
+    # - name: Refresh manifest
+    #   redhat.satellite.subscription_manifest:
+    #     organization: "{{ satellite_organization }}"
+    #     state: refreshed
+    #     server_url: "{{ satellite_server_url }}"
+    #     username: "{{ satellite_username }}"
+    #     password: "{{ satellite_password }}"
+    #     validate_certs: false
+    #   async: 2000
+    #   poll: 60
+    #   tags:
+    #     - post_software
 
     - name: Enable repositories
       ansible.builtin.include_role:
@@ -191,55 +175,16 @@
       register: output
       changed_when: output.rc != 0
 
-    # work around for https://bugzilla.redhat.com/show_bug.cgi?id=1791340
-    - name: Determine correct smart_proxy_dynflow_core directory name from wildcard
-      ansible.builtin.find:
-        paths: /opt/theforeman/tfm/root/usr/share/gems/gems
-        file_type: directory
-        patterns: "^smart_proxy_dynflow_core-"
-        use_regex: true
-      register: smart_proxy_dynflow_core_path
-
-    - name: Print data
-      ansible.builtin.debug:
-        msg: "{{ smart_proxy_dynflow_core_path }}"
-
-    - name: Workaround for bug 1791340
-      ansible.builtin.lineinfile:
-        path: "{{ item.path }}/smart_proxy_dynflow_core.gemspec"
-        regexp: gem.authors
-        line: "  gem.authors       = ['Ivan Necas']"
-      with_items: "{{ smart_proxy_dynflow_core_path.files }}"
-      tags:
-        - post_software
-
     - name: MOTD
       ansible.builtin.copy:
         dest: /etc/motd
         mode: '0644'
         content: |
           #########################################
-          ## Login with Password {{ sat_pass }} ##
+          ## Login with Password {{ satellite_password }} ##
           #########################################
       tags:
         - post_software
-
-    # Because of https://bugzilla.redhat.com/show_bug.cgi?id=1779294 ...need to reset where default python points to
-    - name: Set python to /usr/bin/python3 via alternatives
-    #  community.general.alternatives:
-    #    name: python
-    #    path: /usr/bin/python3.6
-    #    link: /usr/bin/python
-    #    state: present
-    ### Couldn't get alternative module to work correctly, so reverting to
-      ansible.builtin.command: >-
-        alternatives --set python /usr/bin/python3
-      environment:
-        HOME: /root
-      tags:
-        - post_software
-      register: result
-      changed_when: result.rc != 0
 
     - name: Create GPG key directory for importing keys
       ansible.builtin.file:
@@ -256,7 +201,7 @@
         HOME: /root
       register: hammer_org_list_result
       ignore_errors: true
-      changed_when: never
+      changed_when: hammer_org_list_result.rc != 0
 
     - name: Set the Organization Id from specific org selection via satellite_organization variable and .Id
       ansible.builtin.set_fact:
@@ -288,7 +233,7 @@
         organization: "{{ satellite_organization }}"
         server_url: "{{ satellite_server_url }}"
         username: "{{ satellite_username }}"
-        password: "{{ sat_pass }}"
+        password: "{{ satellite_password }}"
       throttle: 1
       with_community.general.flattened: "{{ satellite_products }}"
       when: item.repository_sets is defined
@@ -303,7 +248,7 @@
         organization: "{{ satellite_organization }}"
         server_url: "{{ satellite_server_url }}"
         username: "{{ satellite_username }}"
-        password: "{{ sat_pass }}"
+        password: "{{ satellite_password }}"
       throttle: 1
       with_community.general.flattened: "{{ satellite_products }}"
       when: item.repositories is defined
@@ -318,37 +263,37 @@
     #  command: 'hammer settings set --name content_disconnected --value true'
     #  environment:
     #    HOME: /root
-    - name: Standard settings for satellite
-      ansible.builtin.include_role:
-        name: redhat.satellite.settings
-      vars:
-        satellite_settings:  # noqa: var-naming[no-role-prefix]
-          - name: ansible_out_of_sync_disabled
-            value: true
+    # - name: Standard settings for satellite
+    #   ansible.builtin.include_role:
+    #     name: redhat.satellite.settings
+    #   vars:
+    #     satellite_settings:  # noqa: var-naming[no-role-prefix]
+    #       - name: ansible_out_of_sync_disabled
+    #         value: true
 
-    - name: Remove any persistent udev rules
-      ansible.builtin.file:
-        path: /etc/udev/rules.d/70-persistent-net.rules
-        state: absent
+    # - name: Remove any persistent udev rules
+    #   ansible.builtin.file:
+    #     path: /etc/udev/rules.d/70-persistent-net.rules
+    #     state: absent
 
-    - name: Remove HWADDR MAC line from ifcfg-eth0
-      ansible.builtin.lineinfile:
-        path: /etc/sysconfig/network-scripts/ifcfg-eth0
-        state: absent
-        regexp: '^HWADDR'
+    # - name: Remove HWADDR MAC line from ifcfg-eth0
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/sysconfig/network-scripts/ifcfg-eth0
+    #     state: absent
+    #     regexp: '^HWADDR'
 
-    - name: Build ssh_host_ file list from wildcard
-      ansible.builtin.find:
-        paths: /etc/ssh
-        patterns: "^ssh_host_"
-        use_regex: true
-      register: ssh_host_files_to_delete
+    # - name: Build ssh_host_ file list from wildcard
+    #   ansible.builtin.find:
+    #     paths: /etc/ssh
+    #     patterns: "^ssh_host_"
+    #     use_regex: true
+    #   register: ssh_host_files_to_delete
 
-    - name: Remove ssh_host_ files
-      ansible.builtin.file:
-        path: "{{ item.path }}"
-        state: absent
-      with_items: "{{ ssh_host_files_to_delete.files }}"
+    # - name: Remove ssh_host_ files
+    #   ansible.builtin.file:
+    #     path: "{{ item.path }}"
+    #     state: absent
+    #   with_items: "{{ ssh_host_files_to_delete.files }}"
 
     # - name: unregister
     #   community.general.redhat_subscription:

@@ -13,3 +13,4 @@ kvm_provision_vm_net: default
 kvm_provision_vm_root_pass: r3dh4t1!
 kvm_provision_cleanup_tmp: true
 kvm_provision_ssh_key: /root/.ssh/id_rsa.pub
+kvm_provision_root_partition: /dev/sda4
