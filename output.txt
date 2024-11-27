@@ -1,0 +1,1283 @@
+Using /home/cgs/git/example.com/ansible.cfg as config file
+
+PLAY [Provision idm server (if necessary)] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [satellite]
+
+TASK [Setup activationkey] *****************************************************
+ok: [satellite] => changed=false 
+  entity:
+    activation_keys:
+    - auto_attach: true
+      content_overrides:
+      - content_label: Default_Organization_Extra_Packages_for_Enterprise_Linux_8_ghghghg
+        name: enabled
+        value: '1'
+      - content_label: Default_Organization_fff_containers
+        name: enabled
+        value: '1'
+      - content_label: satellite-client-6-for-rhel-9-x86_64-rpms
+        name: enabled
+        value: '1'
+      content_view:
+        id: 1
+        name: Default Organization View
+      content_view_id: 1
+      created_at: 2024-03-31 23:30:35 UTC
+      description: null
+      environment:
+        id: 1
+        name: Library
+      environment_id: 1
+      host_collections: []
+      id: 2
+      max_hosts: null
+      name: ak-rhel9
+      organization:
+        id: 1
+        label: Default_Organization
+        name: Default Organization
+      organization_id: 1
+      permissions:
+        destroy_activation_keys: true
+        edit_activation_keys: true
+        view_activation_keys: true
+      products: []
+      purpose_addons: []
+      purpose_role: Red Hat Enterprise Linux Server
+      purpose_usage: Development/Test
+      release_version: '9'
+      service_level: Self-Support
+      unlimited_hosts: true
+      updated_at: 2024-09-20 05:33:16 UTC
+      usage_count: 1
+      user_id: 4
+
+TASK [RHEL 9 host group] *******************************************************
+ok: [satellite] => changed=false 
+  entity:
+    hostgroups:
+    - ancestry: null
+      architecture_id: 1
+      architecture_name: x86_64
+      compute_profile_id: 4
+      compute_profile_name: libvirt-compute
+      compute_resource_id: 1
+      compute_resource_name: libvirt hypervisor
+      content_source_id: 1
+      content_source_name: satellite.example.com
+      content_view_id: 1
+      content_view_name: Default Organization View
+      created_at: 2024-09-20 14:41:28 UTC
+      description: null
+      domain_id: 1
+      domain_name: example.com
+      id: 27
+      inherited_architecture_id: null
+      inherited_compute_profile_id: null
+      inherited_compute_resource_id: null
+      inherited_domain_id: null
+      inherited_medium_id: null
+      inherited_operatingsystem_id: null
+      inherited_ptable_id: null
+      inherited_puppet_ca_proxy_id: null
+      inherited_puppet_proxy_id: null
+      inherited_pxe_loader: null
+      inherited_realm_id: null
+      inherited_subnet6_id: null
+      inherited_subnet_id: null
+      kickstart_repository_id: null
+      lifecycle_environment_id: 1
+      lifecycle_environment_name: Library
+      locations:
+      - description: null
+        id: 2
+        name: Default Location
+        title: Default Location
+      medium_id: null
+      medium_name: null
+      name: rhel9-server
+      openscap_proxy:
+        id: 1
+        name: satellite.example.com
+        url: https://satellite.example.com:9090
+      openscap_proxy_id: 1
+      openscap_proxy_name: satellite.example.com
+      operatingsystem_id: 4
+      operatingsystem_name: RedHat 9.3
+      organizations:
+      - description: null
+        id: 1
+        name: Default Organization
+        title: Default Organization
+      parameters:
+      - name: kt_activation_keys
+        parameter_type: string
+        value: ak-rhel9
+      - name: remote_execution_ssh_keys
+        parameter_type: array
+        value: '["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNNJhc7ypD9Bel0Vhiqrxryxao2t7SrthG6wxMTPHZpxeoTd7eRPi3DaFmVx1YNAgd/a/fCeqH1iuQ5kh7tW8X7H2gz0AkjBlDkR9TY29/ppevfXwmrv8Vyqt/dz2yQmgz9E9Pv5h6uO8ty2XmTnPLrrQDPxatQDMNsdpJ4cScorY8yzDeMfjWAIE6bB833RTg9cYj0NFuUTumsDTspgJq83KED4ejv1NWw6wS78Lh7Gt8PmV3ZusufAB1p6Wi8gGumaxsJTMdnyoBBr1WJzAmksAESCbbl02nTI2cwYjGMxJPcszpAiyrRQlNfXJpBfSoTt4Lzaa+C8BieNe5sAaF cgs@host1.home"]'
+      parent_id: null
+      parent_name: null
+      ptable_id: 138
+      ptable_name: Kickstart default
+      puppet_ca_proxy: null
+      puppet_ca_proxy_id: null
+      puppet_ca_proxy_name: null
+      puppet_proxy: null
+      puppet_proxy_id: null
+      puppet_proxy_name: null
+      pxe_loader: PXELinux BIOS
+      realm_id: null
+      realm_name: null
+      subnet6_id: null
+      subnet6_name: null
+      subnet_id: 1
+      subnet_name: Example network
+      template_combinations: []
+      title: rhel9-server
+      updated_at: 2024-09-20 14:41:29 UTC
+
+TASK [Provision IDM server] ****************************************************
+changed: [satellite] => changed=true 
+  entity:
+    hosts:
+    - all_parameters:
+      - associated_type: host group
+        created_at: 2024-09-20 14:41:28 UTC
+        hidden_value?: false
+        id: 61
+        name: remote_execution_ssh_keys
+        parameter_type: array
+        priority: 60
+        updated_at: 2024-09-20 14:41:28 UTC
+        value:
+        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNNJhc7ypD9Bel0Vhiqrxryxao2t7SrthG6wxMTPHZpxeoTd7eRPi3DaFmVx1YNAgd/a/fCeqH1iuQ5kh7tW8X7H2gz0AkjBlDkR9TY29/ppevfXwmrv8Vyqt/dz2yQmgz9E9Pv5h6uO8ty2XmTnPLrrQDPxatQDMNsdpJ4cScorY8yzDeMfjWAIE6bB833RTg9cYj0NFuUTumsDTspgJq83KED4ejv1NWw6wS78Lh7Gt8PmV3ZusufAB1p6Wi8gGumaxsJTMdnyoBBr1WJzAmksAESCbbl02nTI2cwYjGMxJPcszpAiyrRQlNfXJpBfSoTt4Lzaa+C8BieNe5sAaF cgs@host1.home
+      - associated_type: host group
+        created_at: 2024-09-20 14:41:28 UTC
+        hidden_value?: false
+        id: 62
+        name: kt_activation_keys
+        parameter_type: string
+        priority: 60
+        updated_at: 2024-09-20 14:41:29 UTC
+        value: ak-rhel9
+      - associated_type: global
+        created_at: 2023-08-17 05:41:40 UTC
+        hidden_value?: false
+        id: 3
+        name: host_registration_remote_execution
+        parameter_type: boolean
+        priority: 0
+        updated_at: 2023-08-17 05:41:40 UTC
+        value: true
+      - associated_type: global
+        created_at: 2023-08-17 05:40:54 UTC
+        hidden_value?: false
+        id: 1
+        name: host_registration_insights
+        parameter_type: boolean
+        priority: 0
+        updated_at: 2023-08-17 05:40:54 UTC
+        value: true
+      - associated_type: global
+        created_at: 2023-08-17 05:41:40 UTC
+        hidden_value?: false
+        id: 4
+        name: host_packages
+        parameter_type: string
+        priority: 0
+        updated_at: 2023-08-17 05:41:40 UTC
+        value: ''
+      - associated_type: global
+        created_at: 2023-08-17 05:41:41 UTC
+        hidden_value?: false
+        id: 6
+        name: enable-puppet5
+        parameter_type: string
+        priority: 0
+        updated_at: 2023-08-17 05:41:41 UTC
+        value: 'true'
+      - associated_type: global
+        created_at: 2023-08-17 05:41:41 UTC
+        hidden_value?: false
+        id: 5
+        name: enable-epel
+        parameter_type: string
+        priority: 0
+        updated_at: 2023-08-17 05:41:41 UTC
+        value: 'false'
+      - associated_type: global
+        created_at: 2023-08-17 05:41:39 UTC
+        hidden_value?: false
+        id: 2
+        name: ansible_roles_check_mode
+        parameter_type: boolean
+        priority: 0
+        updated_at: 2023-08-17 05:41:39 UTC
+        value: false
+      architecture_id: 1
+      architecture_name: x86_64
+      bmc_available: false
+      build: false
+      build_status: 0
+      build_status_label: Installed
+      capabilities:
+      - build
+      - image
+      - new_volume
+      certname: idm.example.com
+      cockpit_url: /webcon/=idm.example.com
+      comment: null
+      compute_profile_id: 4
+      compute_profile_name: libvirt-compute
+      compute_resource_id: 1
+      compute_resource_name: libvirt hypervisor
+      compute_resource_provider: libvirt
+      content_facet_attributes:
+        applicable_deb_count: 0
+        applicable_module_stream_count: 0
+        applicable_package_count: 0
+        content_source:
+          id: 1
+          name: satellite.example.com
+          url: https://satellite.example.com:9090
+        content_source_id: 1
+        content_source_name: satellite.example.com
+        content_view:
+          composite: false
+          id: 1
+          name: Default Organization View
+        content_view_default?: true
+        content_view_environments:
+        - content_view:
+            composite: false
+            id: 1
+            name: Default Organization View
+          lifecycle_environment:
+            id: 1
+            name: Library
+        content_view_version: '1.0'
+        content_view_version_id: 1
+        content_view_version_latest: true
+        errata_counts:
+          applicable:
+            bugfix: 0
+            enhancement: 0
+            security: 0
+            total: 0
+          bugfix: 0
+          enhancement: 0
+          security: 0
+          total: 0
+        id: 41
+        katello_tracer_installed: false
+        katello_tracer_rpm_available: true
+        kickstart_repository: null
+        kickstart_repository_id: null
+        kickstart_repository_name: null
+        lifecycle_environment:
+          id: 1
+          name: Library
+        lifecycle_environment_library?: true
+        permissions:
+          create_bookmarks: true
+          create_job_invocations: true
+          promote_or_remove_content_views_to_environments: true
+          view_activation_keys: true
+          view_content_views: true
+          view_host_collections: true
+          view_lifecycle_environments: true
+          view_products: true
+        upgradable_deb_count: 0
+        upgradable_module_stream_count: 0
+        upgradable_package_count: 0
+        uuid: b96b829b-d47c-4030-bc08-eb636cf70e24
+      created_at: 2024-09-22 04:32:25 UTC
+      creator: Admin User
+      creator_id: 4
+      disk: null
+      display_name: idm.example.com
+      domain_id: 1
+      domain_name: example.com
+      enabled: true
+      errata_status: 0
+      errata_status_label: All errata applied
+      facts:
+        _timestamp: 2024-09-22 04:33:10 -0400
+        cpu: null
+        cpu::core(s)_per_socket: '1'
+        cpu::cpu(s): '1'
+        cpu::cpu_socket(s): '1'
+        cpu::thread(s)_per_core: '1'
+        cpu::topology_source: kernel /sys cpu sibling lists
+        distribution: null
+        distribution::id: Plow
+        distribution::name: Red Hat Enterprise Linux
+        distribution::version: '9.4'
+        dmi: null
+        dmi::baseboard: null
+        dmi::baseboard::chassis_handle: '0x0300'
+        dmi::baseboard::contained_object_handles: '0'
+        dmi::baseboard::features: Board is a hosting board
+        dmi::baseboard::manufacturer: Red Hat
+        dmi::baseboard::product_name: RHEL
+        dmi::baseboard::type: Motherboard
+        dmi::baseboard::version: RHEL-9.2.0 PC (Q35 + ICH9, 2009)
+        dmi::bios: null
+        dmi::bios::address: '0xe8000'
+        dmi::bios::bios_revision: '0.0'
+        dmi::bios::release_date: 04/01/2014
+        dmi::bios::rom_size: 64 kB
+        dmi::bios::runtime_size: 96 kB
+        dmi::bios::vendor: SeaBIOS
+        dmi::bios::version: 1.16.1-1.el9
+        dmi::chassis: null
+        dmi::chassis::boot-up_state: Safe
+        dmi::chassis::contained_elements: '0'
+        dmi::chassis::lock: Not Present
+        dmi::chassis::manufacturer: Red Hat
+        dmi::chassis::oem_information: '0x00000000'
+        dmi::chassis::power_supply_state: Safe
+        dmi::chassis::thermal_state: Safe
+        dmi::chassis::type: Other
+        dmi::chassis::version: RHEL-9.2.0 PC (Q35 + ICH9, 2009)
+        dmi::memory: null
+        dmi::memory::array_handle: '0x1000'
+        dmi::memory::error_correction_type: Multi-bit ECC
+        dmi::memory::error_information_handle: Not Provided
+        dmi::memory::form_factor: DIMM
+        dmi::memory::location: Other
+        dmi::memory::locator: DIMM 0
+        dmi::memory::manufacturer: Red Hat
+        dmi::memory::maximum_capacity: 4 GB
+        dmi::memory::number_of_devices: '1'
+        dmi::memory::set: None
+        dmi::memory::size: 4 GB
+        dmi::memory::type: RAM
+        dmi::memory::type_detail: Other
+        dmi::memory::use: System Memory
+        dmi::meta: null
+        dmi::meta::cpu_socket_count: '1'
+        dmi::processor: null
+        dmi::processor::characteristics: None
+        dmi::processor::core_count: '1'
+        dmi::processor::core_enabled: '1'
+        dmi::processor::current_speed: 2000 MHz
+        dmi::processor::family: Other
+        dmi::processor::id: 10 0F 87 00 FF FB 8B 07
+        dmi::processor::l1_cache_handle: Not Provided
+        dmi::processor::l2_cache_handle: Not Provided
+        dmi::processor::l3_cache_handle: Not Provided
+        dmi::processor::manufacturer: Red Hat
+        dmi::processor::max_speed: 2000 MHz
+        dmi::processor::socket_designation: CPU 0
+        dmi::processor::status: Populated, Enabled
+        dmi::processor::thread_count: '1'
+        dmi::processor::type: Central Processor
+        dmi::processor::upgrade: Other
+        dmi::processor::version: RHEL-9.2.0 PC (Q35 + ICH9, 2009)
+        dmi::system: null
+        dmi::system::family: Red Hat Enterprise Linux
+        dmi::system::manufacturer: Red Hat
+        dmi::system::product_name: KVM
+        dmi::system::sku_number: 9.2.0
+        dmi::system::uuid: D6C41ECB-9688-434D-82C7-BD6905DF532C
+        dmi::system::version: RHEL-9.2.0 PC (Q35 + ICH9, 2009)
+        dmi::system::wake-up_type: Power Switch
+        last_boot: 2024-09-22 04:32:30 UTC
+        lscpu: null
+        lscpu::address_sizes: 48 bits physical, 48 bits virtual
+        lscpu::architecture: x86_64
+        lscpu::bios_model_name: RHEL-9.2.0 PC (Q35 + ICH9, 2009)
+        lscpu::bios_vendor_id: Red Hat
+        lscpu::bogomips: '7585.74'
+        lscpu::byte_order: Little Endian
+        lscpu::core(s)_per_socket: '1'
+        lscpu::cpu(s): '1'
+        lscpu::cpu_family: '23'
+        lscpu::cpu_op-mode(s): 32-bit, 64-bit
+        lscpu::flags: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm rep_good nopl cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw perfctr_core ssbd ibpb stibp vmmcall fsgsbase tsc_adjust bmi1 avx2 smep bmi2 rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves clzero xsaveerptr wbnoinvd arat npt lbrv nrip_save tsc_scale vmcb_clean pausefilter pfthreshold v_vmsave_vmload vgif umip rdpid arch_capabilities
+        lscpu::hypervisor_vendor: KVM
+        lscpu::l1d_cache: 64 KiB (1 instance)
+        lscpu::l1i_cache: 64 KiB (1 instance)
+        lscpu::l2_cache: 512 KiB (1 instance)
+        lscpu::l3_cache: 16 MiB (1 instance)
+        lscpu::model: '113'
+        lscpu::model_name: AMD Ryzen 9 3900X 12-Core Processor
+        lscpu::numa_node(s): '1'
+        lscpu::numa_node0_cpu(s): '0'
+        lscpu::on-line_cpu(s)_list: '0'
+        lscpu::socket(s): '1'
+        lscpu::stepping: '0'
+        lscpu::thread(s)_per_core: '1'
+        lscpu::vendor_id: AuthenticAMD
+        lscpu::virtualization: AMD-V
+        lscpu::virtualization_type: full
+        lscpu::vulnerability_gather_data_sampling: Not affected
+        lscpu::vulnerability_itlb_multihit: Not affected
+        lscpu::vulnerability_l1tf: Not affected
+        lscpu::vulnerability_mds: Not affected
+        lscpu::vulnerability_meltdown: Not affected
+        lscpu::vulnerability_mmio_stale_data: Not affected
+        lscpu::vulnerability_retbleed: Mitigation; untrained return thunk; SMT disabled
+        lscpu::vulnerability_spec_store_bypass: Mitigation; Speculative Store Bypass disabled via prctl
+        lscpu::vulnerability_spectre_v1: Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+        lscpu::vulnerability_spectre_v2: Mitigation; Retpolines, IBPB conditional, STIBP disabled, RSB filling, PBRSB-eIBRS Not affected
+        lscpu::vulnerability_srbds: Not affected
+        lscpu::vulnerability_tsx_async_abort: Not affected
+        memory: null
+        memory::memtotal: '3735708'
+        memory::swaptotal: '0'
+        net: null
+        net::interface: null
+        net::interface::eth0: null
+        net::interface::eth0::ipv4_address: 192.168.100.49
+        net::interface::eth0::ipv4_address_list: 192.168.100.49
+        net::interface::eth0::ipv4_broadcast: 192.168.100.255
+        net::interface::eth0::ipv4_broadcast_list: 192.168.100.255
+        net::interface::eth0::ipv4_netmask: '24'
+        net::interface::eth0::ipv4_netmask_list: '24'
+        net::interface::eth0::ipv6_address: null
+        net::interface::eth0::ipv6_address::link: fe80::5054:ff:fe5d:3ade
+        net::interface::eth0::ipv6_address::link_list: fe80::5054:ff:fe5d:3ade
+        net::interface::eth0::ipv6_netmask: null
+        net::interface::eth0::ipv6_netmask::link: '64'
+        net::interface::eth0::ipv6_netmask::link_list: '64'
+        net::interface::eth0::mac_address: 52:54:00:5d:3a:de
+        network: null
+        network::fqdn: idm.example.com
+        network::hostname: idm.example.com
+        network::ipv4_address: 192.168.100.49
+        network::ipv6_address: fe80::5054:ff:fe5d:3ade
+        proc_cpuinfo: null
+        proc_cpuinfo::common: null
+        proc_cpuinfo::common::address_sizes: 48 bits physical, 48 bits virtual
+        proc_cpuinfo::common::apicid: '0'
+        proc_cpuinfo::common::bogomips: '7585.74'
+        proc_cpuinfo::common::bugs: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass retbleed smt_rsb
+        proc_cpuinfo::common::cache_alignment: '64'
+        proc_cpuinfo::common::cache_size: 512 KB
+        proc_cpuinfo::common::clflush_size: '64'
+        proc_cpuinfo::common::core_id: '0'
+        proc_cpuinfo::common::cpu_cores: '1'
+        proc_cpuinfo::common::cpu_family: '23'
+        proc_cpuinfo::common::cpu_mhz: '3792.872'
+        proc_cpuinfo::common::cpuid_level: '16'
+        proc_cpuinfo::common::flags: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm rep_good nopl cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw perfctr_core ssbd ibpb stibp vmmcall fsgsbase tsc_adjust bmi1 avx2 smep bmi2 rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves clzero xsaveerptr wbnoinvd arat npt lbrv nrip_save tsc_scale vmcb_clean pausefilter pfthreshold v_vmsave_vmload vgif umip rdpid arch_capabilities
+        proc_cpuinfo::common::fpu: 'yes'
+        proc_cpuinfo::common::fpu_exception: 'yes'
+        proc_cpuinfo::common::initial_apicid: '0'
+        proc_cpuinfo::common::microcode: '0x8701021'
+        proc_cpuinfo::common::model: '113'
+        proc_cpuinfo::common::model_name: AMD Ryzen 9 3900X 12-Core Processor
+        proc_cpuinfo::common::physical_id: '0'
+        proc_cpuinfo::common::processor: '0'
+        proc_cpuinfo::common::siblings: '1'
+        proc_cpuinfo::common::stepping: '0'
+        proc_cpuinfo::common::tlb_size: 1024 4K pages
+        proc_cpuinfo::common::vendor_id: AuthenticAMD
+        proc_cpuinfo::common::wp: 'yes'
+        proc_stat: null
+        proc_stat::btime: '1726979550'
+        system: null
+        system::certificate_version: '3.2'
+        system::default_locale: en_US.UTF-8
+        uname: null
+        uname::machine: x86_64
+        uname::nodename: idm.example.com
+        uname::release: 5.14.0-362.8.1.el9_3.x86_64
+        uname::sysname: Linux
+        uname::version: '#1 SMP PREEMPT_DYNAMIC Tue Oct 3 11:12:36 EDT 2023'
+        virt: null
+        virt::host_type: redhat, kvm
+        virt::is_guest: 'true'
+        virt::uuid: D6C41ECB-9688-434D-82C7-BD6905DF532C
+      global_status: 0
+      global_status_label: Warning
+      host_collections: []
+      hostgroup_id: 27
+      hostgroup_name: rhel9-server
+      hostgroup_title: rhel9-server
+      id: 42
+      image_file: ''
+      image_id: 3
+      image_name: rhel-9.3
+      initiated_at: null
+      installed_at: 2024-09-22 04:37:21 UTC
+      interfaces:
+      - created_at: 2024-09-22 04:32:25 UTC
+        domain_id: 1
+        domain_name: example.com
+        execution: true
+        fqdn: idm.example.com
+        id: 42
+        identifier: eth0
+        ip: 192.168.100.49
+        ip6: null
+        mac: 52:54:00:5d:3a:de
+        managed: true
+        mtu: 1500
+        name: idm.example.com
+        primary: true
+        provision: true
+        subnet6_id: null
+        subnet6_name: null
+        subnet_id: 1
+        subnet_name: Example network
+        type: interface
+        updated_at: 2024-09-22 08:33:10 UTC
+        virtual: false
+      ip: 192.168.100.49
+      ip6: null
+      last_compile: 2024-09-22 08:33:10 UTC
+      last_report: null
+      location_id: 2
+      location_name: Default Location
+      mac: 52:54:00:5d:3a:de
+      managed: true
+      medium_id: null
+      medium_name: null
+      model_id: 1
+      model_name: KVM
+      name: idm.example.com
+      openscap_proxy:
+        id: 1
+        name: satellite.example.com
+        url: https://satellite.example.com:9090
+      openscap_proxy_id: 1
+      openscap_proxy_name: satellite.example.com
+      operatingsystem_id: 8
+      operatingsystem_name: RedHat 9.4
+      organization_id: 1
+      organization_name: Default Organization
+      owner_id: 4
+      owner_name: Admin User
+      owner_type: User
+      parameters: []
+      permissions:
+        auto_provision_discovered_hosts: true
+        build_hosts: true
+        cockpit_hosts: true
+        console_hosts: true
+        create_hosts: true
+        destroy_discovered_hosts: true
+        destroy_hosts: true
+        edit_discovered_hosts: true
+        edit_hosts: true
+        forget_status_hosts: true
+        ipmi_boot_hosts: true
+        play_roles_on_host: true
+        power_hosts: true
+        provision_discovered_hosts: true
+        submit_discovered_hosts: true
+        view_discovered_hosts: true
+        view_hosts: true
+      provision_method: image
+      ptable_id: null
+      ptable_name: null
+      puppet_ca_proxy: null
+      puppet_ca_proxy_id: null
+      puppet_ca_proxy_name: null
+      puppet_proxy: null
+      puppet_proxy_id: null
+      puppet_proxy_name: null
+      puppet_status: 0
+      purpose_addons_status: 0
+      purpose_addons_status_label: Unknown
+      purpose_role_status: 0
+      purpose_role_status_label: Unknown
+      purpose_sla_status: 0
+      purpose_sla_status_label: Unknown
+      purpose_status: 0
+      purpose_status_label: Unknown
+      purpose_usage_status: 0
+      purpose_usage_status_label: Unknown
+      pxe_loader: PXELinux BIOS
+      realm_id: null
+      realm_name: null
+      reported_data:
+        bios_release_date: null
+        bios_vendor: null
+        bios_version: null
+        boot_time: 2024-09-22 04:32:30 UTC
+        cores: 1
+        disks_total: null
+        kernel_version: 5.14.0-362.8.1.el9_3.x86_64
+        sockets: 1
+      rhel_lifecycle_status: 1
+      rhel_lifecycle_status_label: Full support
+      sp_ip: null
+      sp_mac: null
+      sp_name: null
+      sp_subnet_id: null
+      subnet6_id: null
+      subnet6_name: null
+      subnet_id: 1
+      subnet_name: Example network
+      subscription_facet_attributes:
+        activation_keys:
+        - id: 2
+          name: ak-rhel9
+        autoheal: true
+        compliance_reasons: []
+        dmi_uuid: D6C41ECB-9688-434D-82C7-BD6905DF532C
+        host_type: redhat, kvm
+        hypervisor: false
+        id: 29
+        installed_products:
+        - arch: x86_64
+          productId: '479'
+          productName: Red Hat Enterprise Linux for x86_64
+          version: '9.4'
+        last_checkin: 2024-09-23 04:33:12 UTC
+        purpose_addons: []
+        purpose_role: Red Hat Enterprise Linux Server
+        purpose_usage: Development/Test
+        registered_at: 2024-09-22 04:32:44 UTC
+        registered_through: satellite.example.com
+        release_version: '9'
+        service_level: Self-Support
+        user: null
+        uuid: b96b829b-d47c-4030-bc08-eb636cf70e24
+        virtual_guests: []
+        virtual_host: null
+      subscription_global_status: 0
+      subscription_status: 5
+      subscription_status_label: Simple Content Access
+      updated_at: 2024-09-22 08:33:10 UTC
+      uptime_seconds: 87206
+      use_image: null
+      uuid: d6c41ecb-9688-434d-82c7-bd6905df532c
+
+TASK [Is host powered on? (would be off if newly provisioned)] *****************
+ok: [satellite] => changed=false 
+  power_state: 'on'
+
+TASK [Enable build state if new build] *****************************************
+skipping: [satellite] => changed=false 
+  false_condition: host_state.power_state is match('off')
+  skip_reason: Conditional result was False
+
+TASK [If machine is down, power on] ********************************************
+ok: [satellite] => changed=false
+
+RUNNING HANDLER [Wait until server build is complete] **************************
+ok: [satellite] => changed=false 
+  attempts: 1
+  cmd:
+  - hammer
+  - host
+  - status
+  - --id
+  - '42'
+  - --type
+  - build
+  delta: '0:00:01.603911'
+  end: '2024-09-23 00:46:00.754907'
+  msg: ''
+  rc: 0
+  start: '2024-09-23 00:45:59.150996'
+  stderr: ''
+  stderr_lines: <omitted>
+  stdout: |-
+    Status: Installed
+    Power:  running
+  stdout_lines: <omitted>
+
+PLAY [Playbook to configure IPA server] ****************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [idm_server]
+
+TASK [Replace a localhost entry searching for a literal string to avoid escaping] ***
+ok: [idm_server] => changed=false 
+  backup: ''
+  msg: ''
+
+TASK [Get IDM server IP address] ***********************************************
+ok: [idm_server] => changed=false 
+  ansible_facts:
+    idm_ip: 192.168.100.49
+
+TASK [redhat.rhel_idm.ipaserver : Import variables specific to distribution] ***
+ok: [idm_server] => (item=/home/cgs/.ansible/collections/ansible_collections/redhat/rhel_idm/roles/ipaserver/vars/default.yml) => changed=false 
+  ansible_facts:
+    ipaserver_packages:
+    - ipa-server
+    - python3-libselinux
+    ipaserver_packages_adtrust:
+    - freeipa-server-trust-ad
+    ipaserver_packages_dns:
+    - ipa-server-dns
+    ipaserver_packages_firewalld:
+    - firewalld
+  ansible_included_var_files:
+  - /home/cgs/.ansible/collections/ansible_collections/redhat/rhel_idm/roles/ipaserver/vars/default.yml
+  ansible_loop_var: item
+  item: /home/cgs/.ansible/collections/ansible_collections/redhat/rhel_idm/roles/ipaserver/vars/default.yml
+
+TASK [redhat.rhel_idm.ipaserver : Install IPA server] **************************
+included: /home/cgs/.ansible/collections/ansible_collections/redhat/rhel_idm/roles/ipaserver/tasks/install.yml for idm_server
+
+TASK [redhat.rhel_idm.ipaserver : Install - Ensure that IPA server packages are installed] ***
+ok: [idm_server] => changed=false 
+  msg: Nothing to do
+  rc: 0
+  results: []
+
+TASK [redhat.rhel_idm.ipaserver : Install - Ensure that IPA server packages for dns are installed] ***
+skipping: [idm_server] => changed=false 
+  false_condition: ipaserver_setup_dns | bool
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Ensure that IPA server packages for adtrust are installed] ***
+skipping: [idm_server] => changed=false 
+  false_condition: ipaserver_setup_adtrust | bool
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Ensure that firewall packages installed] ***
+ok: [idm_server] => changed=false 
+  msg: Nothing to do
+  rc: 0
+  results: []
+
+TASK [redhat.rhel_idm.ipaserver : Firewalld service - Ensure that firewalld is running] ***
+ok: [idm_server] => changed=false 
+  enabled: true
+  name: firewalld
+  state: started
+  status:
+    AccessSELinuxContext: system_u:object_r:firewalld_unit_file_t:s0
+    ActiveEnterTimestamp: Sun 2024-09-22 20:01:37 EDT
+    ActiveEnterTimestampMonotonic: '70146933718'
+    ActiveExitTimestamp: Sun 2024-09-22 20:00:29 EDT
+    ActiveExitTimestampMonotonic: '70078167923'
+    ActiveState: active
+    After: polkit.service system.slice sysinit.target dbus-broker.service basic.target dbus.socket
+    AllowIsolate: 'no'
+    AssertResult: 'yes'
+    AssertTimestamp: Sun 2024-09-22 20:01:37 EDT
+    AssertTimestampMonotonic: '70146842274'
+    Before: multi-user.target network-pre.target shutdown.target
+    BlockIOAccounting: 'no'
+    BlockIOWeight: '[not set]'
+    BusName: org.fedoraproject.FirewallD1
+    CPUAccounting: 'yes'
+    CPUAffinityFromNUMA: 'no'
+    CPUQuotaPerSecUSec: infinity
+    CPUQuotaPeriodUSec: infinity
+    CPUSchedulingPolicy: '0'
+    CPUSchedulingPriority: '0'
+    CPUSchedulingResetOnFork: 'no'
+    CPUShares: '[not set]'
+    CPUUsageNSec: '465958000'
+    CPUWeight: '[not set]'
+    CacheDirectoryMode: '0755'
+    CanFreeze: 'yes'
+    CanIsolate: 'no'
+    CanReload: 'yes'
+    CanStart: 'yes'
+    CanStop: 'yes'
+    CapabilityBoundingSet: cap_chown cap_dac_override cap_dac_read_search cap_fowner cap_fsetid cap_kill cap_setgid cap_setuid cap_setpcap cap_linux_immutable cap_net_bind_service cap_net_broadcast cap_net_admin cap_net_raw cap_ipc_lock cap_ipc_owner cap_sys_module cap_sys_rawio cap_sys_chroot cap_sys_ptrace cap_sys_pacct cap_sys_admin cap_sys_boot cap_sys_nice cap_sys_resource cap_sys_time cap_sys_tty_config cap_mknod cap_lease cap_audit_write cap_audit_control cap_setfcap cap_mac_override cap_mac_admin cap_syslog cap_wake_alarm cap_block_suspend cap_audit_read cap_perfmon cap_bpf cap_checkpoint_restore
+    CleanResult: success
+    CollectMode: inactive
+    ConditionResult: 'yes'
+    ConditionTimestamp: Sun 2024-09-22 20:01:37 EDT
+    ConditionTimestampMonotonic: '70146842273'
+    ConfigurationDirectoryMode: '0755'
+    Conflicts: nftables.service ipset.service ip6tables.service iptables.service ebtables.service shutdown.target
+    ControlGroup: /system.slice/firewalld.service
+    ControlGroupId: '10571'
+    ControlPID: '0'
+    CoredumpFilter: '0x33'
+    DefaultDependencies: 'yes'
+    DefaultMemoryLow: '0'
+    DefaultMemoryMin: '0'
+    Delegate: 'no'
+    Description: firewalld - dynamic firewall daemon
+    DevicePolicy: auto
+    Documentation: '"man:firewalld(1)"'
+    DynamicUser: 'no'
+    EnvironmentFiles: /etc/sysconfig/firewalld (ignore_errors=yes)
+    ExecMainCode: '0'
+    ExecMainExitTimestampMonotonic: '0'
+    ExecMainPID: '74188'
+    ExecMainStartTimestamp: Sun 2024-09-22 20:01:37 EDT
+    ExecMainStartTimestampMonotonic: '70146845668'
+    ExecMainStatus: '0'
+    ExecReload: '{ path=/bin/kill ; argv[]=/bin/kill -HUP $MAINPID ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }'
+    ExecReloadEx: '{ path=/bin/kill ; argv[]=/bin/kill -HUP $MAINPID ; flags= ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }'
+    ExecStart: '{ path=/usr/sbin/firewalld ; argv[]=/usr/sbin/firewalld --nofork --nopid $FIREWALLD_ARGS ; ignore_errors=no ; start_time=[Sun 2024-09-22 20:01:37 EDT] ; stop_time=[n/a] ; pid=74188 ; code=(null) ; status=0/0 }'
+    ExecStartEx: '{ path=/usr/sbin/firewalld ; argv[]=/usr/sbin/firewalld --nofork --nopid $FIREWALLD_ARGS ; flags= ; start_time=[Sun 2024-09-22 20:01:37 EDT] ; stop_time=[n/a] ; pid=74188 ; code=(null) ; status=0/0 }'
+    ExitType: main
+    FailureAction: none
+    FileDescriptorStoreMax: '0'
+    FinalKillSignal: '9'
+    FragmentPath: /usr/lib/systemd/system/firewalld.service
+    FreezerState: running
+    GID: '[not set]'
+    GuessMainPID: 'yes'
+    IOAccounting: 'no'
+    IOReadBytes: '18446744073709551615'
+    IOReadOperations: '18446744073709551615'
+    IOSchedulingClass: '2'
+    IOSchedulingPriority: '4'
+    IOWeight: '[not set]'
+    IOWriteBytes: '18446744073709551615'
+    IOWriteOperations: '18446744073709551615'
+    IPAccounting: 'no'
+    IPEgressBytes: '[no data]'
+    IPEgressPackets: '[no data]'
+    IPIngressBytes: '[no data]'
+    IPIngressPackets: '[no data]'
+    Id: firewalld.service
+    IgnoreOnIsolate: 'no'
+    IgnoreSIGPIPE: 'yes'
+    InactiveEnterTimestamp: Sun 2024-09-22 20:00:29 EDT
+    InactiveEnterTimestampMonotonic: '70078193197'
+    InactiveExitTimestamp: Sun 2024-09-22 20:01:37 EDT
+    InactiveExitTimestampMonotonic: '70146845876'
+    InvocationID: 07f5084e68ff450dab9bdb124367491a
+    JobRunningTimeoutUSec: infinity
+    JobTimeoutAction: none
+    JobTimeoutUSec: infinity
+    KeyringMode: private
+    KillMode: mixed
+    KillSignal: '15'
+    LimitAS: infinity
+    LimitASSoft: infinity
+    LimitCORE: infinity
+    LimitCORESoft: '0'
+    LimitCPU: infinity
+    LimitCPUSoft: infinity
+    LimitDATA: infinity
+    LimitDATASoft: infinity
+    LimitFSIZE: infinity
+    LimitFSIZESoft: infinity
+    LimitLOCKS: infinity
+    LimitLOCKSSoft: infinity
+    LimitMEMLOCK: '8388608'
+    LimitMEMLOCKSoft: '8388608'
+    LimitMSGQUEUE: '819200'
+    LimitMSGQUEUESoft: '819200'
+    LimitNICE: '0'
+    LimitNICESoft: '0'
+    LimitNOFILE: '524288'
+    LimitNOFILESoft: '1024'
+    LimitNPROC: '14280'
+    LimitNPROCSoft: '14280'
+    LimitRSS: infinity
+    LimitRSSSoft: infinity
+    LimitRTPRIO: '0'
+    LimitRTPRIOSoft: '0'
+    LimitRTTIME: infinity
+    LimitRTTIMESoft: infinity
+    LimitSIGPENDING: '14280'
+    LimitSIGPENDINGSoft: '14280'
+    LimitSTACK: infinity
+    LimitSTACKSoft: '8388608'
+    LoadState: loaded
+    LockPersonality: 'no'
+    LogLevelMax: '-1'
+    LogRateLimitBurst: '0'
+    LogRateLimitIntervalUSec: '0'
+    LogsDirectoryMode: '0755'
+    MainPID: '74188'
+    ManagedOOMMemoryPressure: auto
+    ManagedOOMMemoryPressureLimit: '0'
+    ManagedOOMPreference: none
+    ManagedOOMSwap: auto
+    MemoryAccounting: 'yes'
+    MemoryAvailable: infinity
+    MemoryCurrent: '27844608'
+    MemoryDenyWriteExecute: 'no'
+    MemoryHigh: infinity
+    MemoryLimit: infinity
+    MemoryLow: '0'
+    MemoryMax: infinity
+    MemoryMin: '0'
+    MemorySwapMax: infinity
+    MountAPIVFS: 'no'
+    NFileDescriptorStore: '0'
+    NRestarts: '0'
+    NUMAPolicy: n/a
+    Names: firewalld.service dbus-org.fedoraproject.FirewallD1.service
+    NeedDaemonReload: 'no'
+    Nice: '0'
+    NoNewPrivileges: 'no'
+    NonBlocking: 'no'
+    NotifyAccess: none
+    OOMPolicy: stop
+    OOMScoreAdjust: '0'
+    OnFailureJobMode: replace
+    OnSuccessJobMode: fail
+    Perpetual: 'no'
+    PrivateDevices: 'no'
+    PrivateIPC: 'no'
+    PrivateMounts: 'no'
+    PrivateNetwork: 'no'
+    PrivateTmp: 'no'
+    PrivateUsers: 'no'
+    ProcSubset: all
+    ProtectClock: 'no'
+    ProtectControlGroups: 'no'
+    ProtectHome: 'no'
+    ProtectHostname: 'no'
+    ProtectKernelLogs: 'no'
+    ProtectKernelModules: 'no'
+    ProtectKernelTunables: 'no'
+    ProtectProc: default
+    ProtectSystem: 'no'
+    RefuseManualStart: 'no'
+    RefuseManualStop: 'no'
+    ReloadResult: success
+    ReloadSignal: '1'
+    RemainAfterExit: 'no'
+    RemoveIPC: 'no'
+    Requires: sysinit.target system.slice dbus.socket
+    Restart: 'no'
+    RestartKillSignal: '15'
+    RestartUSec: 100ms
+    RestrictNamespaces: 'no'
+    RestrictRealtime: 'no'
+    RestrictSUIDSGID: 'no'
+    Result: success
+    RootDirectoryStartOnly: 'no'
+    RuntimeDirectoryMode: '0755'
+    RuntimeDirectoryPreserve: 'no'
+    RuntimeMaxUSec: infinity
+    RuntimeRandomizedExtraUSec: '0'
+    SameProcessGroup: 'no'
+    SecureBits: '0'
+    SendSIGHUP: 'no'
+    SendSIGKILL: 'yes'
+    Slice: system.slice
+    StandardError: 'null'
+    StandardInput: 'null'
+    StandardOutput: 'null'
+    StartLimitAction: none
+    StartLimitBurst: '5'
+    StartLimitIntervalUSec: 10s
+    StartupBlockIOWeight: '[not set]'
+    StartupCPUShares: '[not set]'
+    StartupCPUWeight: '[not set]'
+    StartupIOWeight: '[not set]'
+    StateChangeTimestamp: Sun 2024-09-22 20:01:37 EDT
+    StateChangeTimestampMonotonic: '70146933718'
+    StateDirectoryMode: '0755'
+    StatusErrno: '0'
+    StopWhenUnneeded: 'no'
+    SubState: running
+    SuccessAction: none
+    SyslogFacility: '3'
+    SyslogLevel: '6'
+    SyslogLevelPrefix: 'yes'
+    SyslogPriority: '30'
+    SystemCallErrorNumber: '2147483646'
+    TTYReset: 'no'
+    TTYVHangup: 'no'
+    TTYVTDisallocate: 'no'
+    TasksAccounting: 'yes'
+    TasksCurrent: '2'
+    TasksMax: '22848'
+    TimeoutAbortUSec: 1min 30s
+    TimeoutCleanUSec: infinity
+    TimeoutStartFailureMode: terminate
+    TimeoutStartUSec: 1min 30s
+    TimeoutStopFailureMode: terminate
+    TimeoutStopUSec: 1min 30s
+    TimerSlackNSec: '50000'
+    Transient: 'no'
+    Type: dbus
+    UID: '[not set]'
+    UMask: '0022'
+    UnitFilePreset: enabled
+    UnitFileState: enabled
+    UtmpMode: init
+    WantedBy: multi-user.target
+    Wants: network-pre.target
+    WatchdogSignal: '6'
+    WatchdogTimestampMonotonic: '0'
+    WatchdogUSec: '0'
+
+TASK [redhat.rhel_idm.ipaserver : Firewalld - Verify runtime zone "{{ ipaserver_firewalld_zone }}"] ***
+skipping: [idm_server] => changed=false 
+  false_condition: ipaserver_firewalld_zone is defined
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Firewalld - Verify permanent zone "{{ ipaserver_firewalld_zone }}"] ***
+skipping: [idm_server] => changed=false 
+  false_condition: ipaserver_firewalld_zone is defined
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Copy external certs] *************************
+skipping: [idm_server] => changed=false 
+  false_condition: ipaserver_external_cert_files_from_controller is defined and ipaserver_external_cert_files_from_controller|length > 0 and not ipaserver_external_cert_files is defined
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Server installation test] **********
+ok: [idm_server] => changed=false 
+  server_already_configured: true
+
+TASK [redhat.rhel_idm.ipaserver : Install - Master password creation] **********
+skipping: [idm_server] => changed=false 
+  censored: 'the output has been hidden due to the fact that ''no_log: true'' was specified for this result'
+
+TASK [redhat.rhel_idm.ipaserver : Install - Use new master password] ***********
+skipping: [idm_server] => changed=false 
+  censored: 'the output has been hidden due to the fact that ''no_log: true'' was specified for this result'
+
+TASK [redhat.rhel_idm.ipaserver : Use user defined master password, if provided] ***
+skipping: [idm_server] => changed=false 
+  censored: 'the output has been hidden due to the fact that ''no_log: true'' was specified for this result'
+
+TASK [redhat.rhel_idm.ipaserver : Install - Server preparation] ****************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Setup NTP] *************************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Setup DS] **************************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Setup KRB] *************************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Setup CA] **************************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Copy /root/ipa.csr to "idm_server-ipa.csr"] ***
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Setup otpd] ************************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Setup HTTP] ************************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Setup KRA] *************************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Setup DNS] *************************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Setup ADTRUST] *********************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Set DS password] *******************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [Install - Setup client] **************************************************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Enable IPA] ************************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Configure firewalld] ***************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Configure firewalld runtime] *******
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Install - Cleanup root IPA cache] ************
+skipping: [idm_server] => changed=false 
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  skip_reason: Conditional result was False
+
+TASK [redhat.rhel_idm.ipaserver : Cleanup temporary files] *********************
+skipping: [idm_server] => (item=/etc/ipa/.tmp_pkcs12_dirsrv)  => changed=false 
+  ansible_loop_var: item
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  item: /etc/ipa/.tmp_pkcs12_dirsrv
+  skip_reason: Conditional result was False
+skipping: [idm_server] => (item=/etc/ipa/.tmp_pkcs12_http)  => changed=false 
+  ansible_loop_var: item
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  item: /etc/ipa/.tmp_pkcs12_http
+  skip_reason: Conditional result was False
+skipping: [idm_server] => (item=/etc/ipa/.tmp_pkcs12_pkinit)  => changed=false 
+  ansible_loop_var: item
+  false_condition: not ansible_check_mode and not (not result_ipaserver_test.changed and (result_ipaserver_test.client_already_configured is defined or result_ipaserver_test.server_already_configured is defined))
+  item: /etc/ipa/.tmp_pkcs12_pkinit
+  skip_reason: Conditional result was False
+skipping: [idm_server] => changed=false 
+  msg: All items skipped
+
+TASK [redhat.rhel_idm.ipaserver : Uninstall IPA server] ************************
+skipping: [idm_server] => changed=false 
+  false_condition: state|default('present') == 'absent'
+  skip_reason: Conditional result was False
+
+PLAY [Register satellite server to IDM] ****************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [satellite]
+
+TASK [Install ipa client] ******************************************************
+ok: [satellite] => changed=false 
+  msg: Nothing to do
+  rc: 0
+  results: []
+
+TASK [debug] *******************************************************************
+ok: [satellite] => 
+  hostvars['idm.example.com']:
+    ansible_check_mode: false
+    ansible_config_file: /home/cgs/git/example.com/ansible.cfg
+    ansible_diff_mode: false
+    ansible_facts: {}
+    ansible_forks: 5
+    ansible_inventory_sources:
+    - /home/cgs/git/example.com/inventory/hosts.ini
+    ansible_playbook_python: /usr/bin/python3
+    ansible_run_tags:
+    - all
+    ansible_skip_tags: []
+    ansible_user: root
+    ansible_verbosity: 1
+    ansible_version:
+      full: 2.16.10
+      major: 2
+      minor: 16
+      revision: 10
+      string: 2.16.10
+    compliance_server: compliance.example.com
+    default_password: r3dh4t1!
+    dnf_module_list:
+    - module: satellite
+      stream: el8
+    group_names:
+    - ipaservers
+    groups:
+      all:
+      - satellite
+      - nfs_server
+      - compliance_server
+      - rproxy
+      - idm_server
+      - controller
+      - libvirt
+      - hypervisor
+      - satellite.example.com
+      - idm.example.com
+      example_com:
+      - satellite
+      - nfs_server
+      - compliance_server
+      - rproxy
+      - idm_server
+      ipaclients:
+      - satellite.example.com
+      ipaservers:
+      - idm.example.com
+      managed:
+      - controller
+      - libvirt
+      - hypervisor
+      ungrouped: []
+    host_activation_key_8: ak-rhel8
+    host_activation_key_9: ak-rhel9
+    idm_server: idm.example.com
+    inventory_dir: /home/cgs/git/example.com/inventory
+    inventory_file: /home/cgs/git/example.com/inventory/hosts.ini
+    inventory_hostname: idm.example.com
+    inventory_hostname_short: idm
+    libvirt_compute: libvirt-compute
+    nfs_server: server.example.com
+    omit: __omit_place_holder__a47290719120709a9574028a5cb803d09d7b4c4d
+    org_id: '6600066'
+    playbook_dir: /home/cgs/git/example.com/provisioners/idm
+    satellite_activation_key: AK-Sat
+    satellite_client_repo_8: satellite-client-6-for-rhel-8-x86_64-rpms
+    satellite_client_repo_9: satellite-client-6-for-rhel-9-x86_64-rpms
+    satellite_infra_workloads:
+    - redhat.satellite.manifest
+    - redhat.satellite.repositories
+    satellite_location: Default Location
+    satellite_manifest_path: /tmp/manifest.zip
+    satellite_organization: Default Organization
+    satellite_password: satellite123
+    satellite_products:
+    - name: Red Hat Enterprise Linux for x86_64
+      repository_sets:
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
+        releasever: 9
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
+        releasever: 9.2
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (Kickstart)
+        releasever: 9.2
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (Kickstart)
+        releasever: 9.3
+      - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
+        releasever: 9
+      - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
+        releasever: 9.2
+      - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
+        releasever: 9.3
+      - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 (RPMs)
+    - name: Red Hat Enterprise Linux for x86_64
+      repository_sets:
+      - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
+        releasever: 8
+      - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
+        releasever: 8.8
+      - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (Kickstart)
+        releasever: 8.8
+      - name: Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
+        releasever: 8
+      - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
+        releasever: 8.9
+      - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (Kickstart)
+        releasever: 8.9
+      - name: Red Hat Satellite Client 6 for RHEL 8 x86_64 (RPMs)
+    - name: Extra Packages for Enterprise Linux 8
+      repositories:
+      - content_type: yum
+        mirror_on_sync: true
+        name: Extra Packages for Enterprise Linux 8 x86_64
+        url: https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/
+    satellite_server: satellite.example.com
+    satellite_server_url: https://satellite.example.com/
+    satellite_username: admin
+    validate_certs: false
+
+TASK [meta] ********************************************************************
+
+PLAY RECAP *********************************************************************
+idm_server                 : ok=9    changed=0    unreachable=0    failed=0    skipped=27   rescued=0    ignored=0   
+satellite                  : ok=10   changed=1    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+

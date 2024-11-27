@@ -1,0 +1,237 @@
+---
+# code: language=ansible
+- name: Setup satellite for provisioning
+  # gather_facts: false
+  hosts: satellite
+  become: true
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
+
+  tasks:
+    - name: Apply patch for instance based provisioning on libvirt
+      ansible.posix.patch:
+        src: backing_volume.patch
+        dest: /usr/share/gems/gems/fog-libvirt-0.9.0/lib/fog/libvirt/models/compute/templates/volume.xml.erb
+        backup: true
+      tags: never
+
+    - name: Apply patch to convert virt CD to SCSI
+      ansible.posix.patch:
+        src: q35-image.patch
+        dest: /usr/share/gems/gems/fog-libvirt-0.12.0/lib/fog/libvirt/models/compute/server.rb
+        backup: true
+
+    - name: Install additional software
+      ansible.builtin.yum:
+        name:
+          - libvirt-client
+          - rhel-system-roles
+        disable_plugin:
+          - foreman-protector
+        state: present
+
+    - name: SSH key create
+      ansible.builtin.user:
+        name: foreman
+        generate_ssh_key: true
+        ssh_key_file: .ssh/id_rsa
+      register: ssh_key
+
+    - name: SSH public key Install
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ ssh_key.ssh_public_key }}"
+      delegate_to: "root@host4.home"
+
+    - name: Collect ssh keys from host4.home
+      ansible.builtin.command: "ssh-keyscan {{ libvirt_compute }}"
+      register: "host_keys"
+      changed_when: false
+
+    - name: Copy over known_hosts key
+      ansible.builtin.known_hosts:
+        path: /usr/share/foreman/.ssh/known_hosts
+        name: {{ libvirt_compute }}
+        key: "{{ host_keys.stdout }}"
+
+    - name: Fixup permissions for known_hosts file
+      ansible.builtin.file:
+        path: /usr/share/foreman/.ssh/known_hosts
+        owner: foreman
+        group: foreman
+        mode: '0644'
+
+    - name: Create compute resource     # noqa: args[module]
+      redhat.satellite.compute_resource:
+        name: libvirt hypervisor
+        provider: libvirt
+        provider_params:
+          url: "qemu+ssh://root@{{ libvirt_compute }}/system"
+          set_console_password: false
+
+    - name: Create compute item.profile # noqa: args[module]
+      redhat.satellite.compute_profile:
+        name: libvirt-compute
+        compute_attributes:
+          - compute_resource: libvirt hypervisor
+            vm_attrs:
+              cpus: 1
+              cpu_mode: "host-model"
+              memory: 4294967296 # 4 GB
+              # virtual (NAT) / example.com network example.com domain
+              nics_attributes:
+                0:
+                  type: network
+                  network: example.com
+                  model: virtio
+              volumes_attributes:
+                0:
+                  pool_name: default
+                  capacity: 10G
+                  format_type: qcow2
+        state: present
+
+    # Fix userdata bug
+    - name: Add User data template # noqa: args[module]
+      redhat.satellite.provisioning_template:
+        template: "{{ lookup('file', 'kickstart_default_user_data_2.erb') }}"
+        kind: "user_data"
+        name: "Kickstart default user data (fixed)"
+        operatingsystems:
+          - "Redhat 8.8"
+          - "RedHat 9.3"
+        state: present
+
+    - name: Associate new userdata template
+      ansible.builtin.include_role:
+        name: redhat.satellite.operatingsystems
+      vars:
+        satellite_operatingsystems: # noqa: var-naming[no-role-prefix]
+          - name: "Redhat"
+            major: "8"
+            minor: "8"
+            os_family: "Redhat"
+            password_hash: "SHA256"
+            architectures: "x86_64"
+            default_templates:
+              - template_kind: "user_data"
+                provisioning_template: "Kickstart default user data (fixed)"
+          - name: "RedHat"
+            major: "9"
+            minor: "3"
+            os_family: "Redhat"
+            password_hash: "SHA256"
+            architectures: "x86_64"
+            default_templates:
+              - template_kind: "user_data"
+                provisioning_template: "Kickstart default user data (fixed)"
+
+    # Need to parameterize
+    #
+    - name: Add image  # noqa: args[module]
+      redhat.satellite.image:
+        name: rhel-8
+        architecture: x86_64
+        operatingsystem: "Redhat 8.8" # This might change to RedHat 8.8 on rebuild"
+        uuid: "/home/images/rhel-8.8-x86_64-kvm.qcow2"
+        compute_resource: libvirt hypervisor
+        image_username: root
+        user_data: true
+        state: present
+
+    - name: Satellite settings for provisioning
+      ansible.builtin.include_role:
+        name: redhat.satellite.settings
+      vars:
+        satellite_settings: # noqa: var-naming[no-role-prefix]
+          - name: destroy_vm_on_host_delete
+            value: true
+          - name: root_pass
+            value: "{{ default_password }}"
+
+    - name: Setup activationkey (RHEL 8)   # noqa: args[module]
+      redhat.satellite.activation_key:
+        name: "{{ host_activation_key_8 }}"
+        content_view: "Default Organization View"
+        lifecycle_environment: "Library"
+        content_overrides:
+          - label: "{{ satellite_client_repo_8 }}"
+            override: enabled
+        release_version: 8
+        # service_level: Standard
+        purpose_role: "Red Hat Enterprise Linux Server"
+        state: present
+        organization: "{{ satellite_organization }}"
+
+    - name: Setup activationkey (RHEL 9)   # noqa: args[module]
+      redhat.satellite.activation_key:
+        name: "{{ host_activation_key_9 }}"
+        content_view: "Default Organization View"
+        lifecycle_environment: "Library"
+        content_overrides:
+          - label: "{{ satellite_client_repo_9 }}"
+            override: enabled
+        release_version: 9
+        service_level: "Self-Support"
+        purpose_role: "Red Hat Enterprise Linux Server"
+        state: present
+        organization: "{{ satellite_organization }}"    # Set up host group "hosts"  (test)
+
+    - name: Setup server hostgroup (RHEL 8)   # noqa: args[module]
+      redhat.satellite.hostgroup:
+        name: rhel9-server
+        activation_keys: "{{ host_activation_key_8 }}"
+        compute_resource: "libvirt hypervisor"
+        compute_profile: "libvirt-compute"
+        domain: "example.com"
+        lifecycle_environment: "Library"
+        # content_view: "Default Organization View"
+        subnet: "Example network"
+        operatingsystem: "Redhat 8.8"
+        pxe_loader: "PXELinux BIOS"
+        ptable: "Kickstart default"
+        architecture: "x86_64"
+        parameters:
+          - name: remote_execution_ssh_keys
+            parameter_type: array
+            value:
+              - "{{ lookup('file', 'cgs_key.pub') }}"
+        organization: "{{ satellite_organization }}"
+        locations:
+          - "{{ satellite_location }}"
+        content_source: "{{ satellite_server }}"
+        openscap_proxy: "{{ satellite_server }}"
+        state: present
+
+    - name: Setup server hostgroup (RHEL 9)   # noqa: args[module]
+      redhat.satellite.hostgroup:
+        name: rhel9-server
+        activation_keys: "{{ host_activation_key_9 }}"
+        compute_resource: "libvirt hypervisor"
+        compute_profile: "libvirt-compute"
+        domain: "example.com"
+        lifecycle_environment: "Library"
+        content_view: "Default Organization View"
+        subnet: "Example network"
+        operatingsystem: "RedHat 9.3"
+        pxe_loader: "PXELinux BIOS"
+        ptable: "Kickstart default"
+        architecture: "x86_64"
+        parameters:
+          - name: remote_execution_ssh_keys
+            parameter_type: array
+            value:
+              - "{{ lookup('file', 'cgs_key.pub') }}"
+        organization: "{{ satellite_organization }}"
+        locations:
+          - "{{ satellite_location }}"
+        content_source: "{{ satellite_server }}"
+        openscap_proxy: "{{ satellite_server }}"
+        state: present

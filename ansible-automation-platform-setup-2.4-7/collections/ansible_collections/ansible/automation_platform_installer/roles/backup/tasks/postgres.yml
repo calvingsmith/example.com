@@ -1,0 +1,162 @@
+---
+- block:
+  - name: Append .gz to database archive filename if use_compression
+    set_fact:
+      db_filename: tower.db.gz
+    when: (use_compression | bool)
+
+  - name: Cleanup postgres backup directory
+    file:
+      path: '{{ backup_dir.rstrip("/") }}/postgres/'
+      state: absent
+
+  - name: Copy temporary sql files
+    copy:
+      src: '{{ item }}'
+      dest: '{{ backup_dir.rstrip("/") }}/postgres/'
+      owner: root
+      mode: '0600'
+    with_items:
+      - instance_group_map.sql
+      - instance_group_map_cleanup.sql
+
+  - name: Create (temporary) mapping between instance group ids / names
+    community.postgresql.postgresql_query:
+      db: '{{ controller_db_settings.default.NAME }}'
+      login_host: '{{ controller_db_settings.default.HOST }}'
+      login_port: '{{ controller_db_settings.default.PORT }}'
+      login_user: '{{ controller_db_settings.default.USER }}'
+      login_password: '{{ controller_db_settings.default.PASSWORD }}'
+      path_to_script: '{{ backup_dir.rstrip("/") }}/postgres/instance_group_map.sql'
+      as_single_query: true
+    environment: '{{ extra_env | default(omit) }}'
+
+  - name: Pre-create database dump to establish permissions
+    file:
+      path: '{{ backup_dir.rstrip("/") }}/postgres/{{ db_filename }}'
+      owner: root
+      mode: '0600'
+      state: touch
+
+  - block:
+    - name: Precreate database partitions to avoid pg_dump locks
+      command: awx-manage precreate_partitions --count='{{ precreate_partition_hours }}'
+      become_user: awx
+      become: True
+      register: result
+      changed_when: "'Created partitions for' in result.stdout"
+      failed_when: "'Created partitions for' not in result.stdout"
+    rescue:
+    - name: awx-manage command is not in this version, recommend update
+      debug:
+        msg: "Unable to precreate db partitions. precreate_partitions command was added in Automation Controller version 4.4.1. Please upgrade if you would like to use this feature."
+      when: "'Unknown command' in result.stderr"
+    - name: awx-manage command failed
+      debug:
+        msg: "Task ran into an error while attempting to precreate db partitions."
+      when: "'Unknown command' not in result.stderr"
+
+  # clean drops the database
+  # create adds instructions to create the database
+  # Note: user needs access to postgres template when restoring
+  - name: Perform a PostgreSQL dump.
+    community.postgresql.postgresql_db:
+      name: '{{ controller_db_settings.default.NAME }}'
+      login_host: '{{ controller_db_settings.default.HOST }}'
+      login_port: '{{ controller_db_settings.default.PORT }}'
+      login_user: '{{ controller_db_settings.default.USER }}'
+      login_password: '{{ controller_db_settings.default.PASSWORD }}'
+      target: '{{ backup_dir.rstrip("/") }}/postgres/{{ db_filename }}'
+      target_opts: '--clean --create --exclude-table=main_instance --exclude-table=main_instancegroup --exclude-table=main_instancegroup_instances'
+      state: dump
+    environment: '{{ extra_env | default(omit) }}'
+
+  - name: Make sure PostgreSQL dump has the right permissions
+    file:
+      path: '{{ backup_dir.rstrip("/") }}/postgres/{{ db_filename }}'
+      owner: root
+      mode: '0600'
+      state: file
+
+  - name: Remove mapping between instance group ids / names
+    community.postgresql.postgresql_query:
+      db: '{{ controller_db_settings.default.NAME }}'
+      login_host: '{{ controller_db_settings.default.HOST }}'
+      login_port: '{{ controller_db_settings.default.PORT }}'
+      login_user: '{{ controller_db_settings.default.USER }}'
+      login_password: '{{ controller_db_settings.default.PASSWORD }}'
+      path_to_script: '{{ backup_dir.rstrip("/") }}/postgres/instance_group_map_cleanup.sql'
+      as_single_query: true
+    environment: '{{ extra_env | default(omit) }}'
+
+  - name: Remove temporary sql files
+    file:
+      path: '{{ backup_dir.rstrip("/") }}/postgres/{{ item }}'
+      state: absent
+    with_items:
+      - instance_group_map.sql
+      - instance_group_map_cleanup.sql
+
+  when:
+    - groups['automationcontroller'] | default([]) | length
+    - inventory_hostname == groups['automationcontroller'][0]
+
+- block:
+    - name: Pre-create database dump to establish permissions
+      file:
+        path: '{{ backup_dir.rstrip("/") }}/automationhub/automationhub/automationhub.db'
+        owner: root
+        mode: '0600'
+        state: touch
+
+    - name: Perform a PostgreSQL dump.
+      community.postgresql.postgresql_db:
+        name: '{{ automationhub_db_settings.default.NAME }}'
+        login_host: '{{ automationhub_db_settings.default.HOST }}'
+        login_port: '{{ automationhub_db_settings.default.PORT }}'
+        login_user: '{{ automationhub_db_settings.default.USER }}'
+        login_password: '{{ automationhub_db_settings.default.PASSWORD }}'
+        target: '{{ backup_dir.rstrip("/") }}/automationhub/automationhub/automationhub.db'
+        target_opts: '--clean --create'
+        state: dump
+      environment: '{{ extra_env | default(omit) }}'
+
+    - name: Make sure PostgreSQL dump has the right permissions
+      file:
+        path: '{{ backup_dir.rstrip("/") }}/automationhub/automationhub/automationhub.db'
+        owner: root
+        mode: '0600'
+        state: file
+
+  when:
+    - inventory_hostname in groups['automationhub'] | default([])
+
+- block:
+    - name: Pre-create database dump to establish permissions
+      file:
+        path: '{{ backup_dir.rstrip("/") }}/automationedacontroller/automationedacontroller/automationedacontroller.db'
+        owner: root
+        mode: '0600'
+        state: touch
+
+    - name: Perform a PostgreSQL dump.
+      postgresql_db:
+        name: '{{ automationedacontroller_db_settings.name }}'
+        login_host: '{{ automationedacontroller_db_settings.host }}'
+        login_port: '{{ automationedacontroller_db_settings.port }}'
+        login_user: '{{ automationedacontroller_db_settings.user }}'
+        login_password: '{{ automationedacontroller_db_settings.password }}'
+        target: '{{ backup_dir.rstrip("/") }}/automationedacontroller/automationedacontroller/automationedacontroller.db'
+        target_opts: '--clean --create'
+        state: dump
+      environment: '{{ extra_env | default(omit) }}'
+
+    - name: Make sure PostgreSQL dump has the right permissions
+      file:
+        path: '{{ backup_dir.rstrip("/") }}/automationedacontroller/automationedacontroller/automationedacontroller.db'
+        owner: root
+        mode: '0600'
+        state: file
+
+  when:
+    - inventory_hostname in groups['automationedacontroller'] | default([])

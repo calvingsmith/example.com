@@ -1,0 +1,21 @@
+---
+# code language=ansible
+- name: Setup Reverse Proxy
+  hosts: satellite
+  become: true
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
+
+  tasks:
+    - name: Teardown server
+      ansible.builtin.include_role:
+        name: sat_provision
+        tasks_from: teardown
+      vars:
+        server_name: "rproxy.example.com"

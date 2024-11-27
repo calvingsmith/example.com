@@ -1,0 +1,59 @@
+---
+# code language=ansible
+- name: Setup Reverse Proxy
+  hosts: satellite
+  become: true
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
+
+  tasks:
+    - name: Provision server
+      ansible.builtin.include_role:
+        name: sat_provision # noqa var-naming[no-role-prefix]
+      vars:
+        server_name: "rproxy.example.com"
+
+- name: Install nginx
+  hosts: rproxy
+  become: true
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+  vars:
+    - backend_server: "{{ satellite_server }}"
+    - backend_port: "80"
+
+  tasks:
+    - name: Install nginx
+      ansible.builtin.include_role:
+        name: nginxinc.nginx
+      vars:
+        nginx_install_from: os_repository
+
+    # Define the backend server details (replace with actual values)
+    - name: Set backend server details
+      ansible.builtin.set_fact:
+        backend_server: "{{ satellite_server }}"
+        backend_port: 443
+
+    # Create a basic reverse proxy configuration file
+    - name: Create reverse proxy configuration
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/conf.d/default.conf
+        owner: root
+        group: root
+        mode: u=rw,g=r,o=r
+
+    # Enable the default site and reload Nginx
+    - name: Enable default site and reload Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+        enabled: true

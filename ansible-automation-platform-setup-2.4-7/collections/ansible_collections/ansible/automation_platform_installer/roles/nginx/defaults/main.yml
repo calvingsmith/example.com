@@ -1,0 +1,7 @@
+---
+## Operational parameters
+nginx_fallback_version: '1.20'
+nginx_version: '1.22'
+
+## Configurable parameters
+nginx_user_http_config: []        # List of strings added to nginx's http config block in nginx.conf. By default, this is an empty list.

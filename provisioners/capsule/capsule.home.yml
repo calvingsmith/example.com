@@ -5,7 +5,7 @@
   gather_facts: yes
   become: yes
   vars:
-    pool_dir: "{{ libvirt_pool_dir }}"
+    pool_dir: "{{ kvm_provision_libvirt_pool_dir }}"
     vm: capsule.example.com
     vcpus: 2
     ram_mb: 12288
@@ -19,14 +19,14 @@
       include_role:
         name: kvm_provision
       vars:
-#         libvirt_pool_dir: "{{ pool_dir }}"
-        vm_name: "{{ vm }}"
-        vm_vcpus: "{{ vcpus }}"
-        vm_ram_mb: "{{ ram_mb }}"
-        vm_size: "{{ size }}"
-        vm_net: "{{ net }}"
-        cleanup_tmp: "{{ cleanup }}"
-        ssh_key: "{{ ssh_pub_key }}"
+#         kvm_provision_libvirt_pool_dir: "{{ pool_dir }}"
+        kvm_provision_vm_name: "{{ vm }}"
+        kvm_provision_vm_vcpus: "{{ vcpus }}"
+        kvm_provision_vm_ram_mb: "{{ ram_mb }}"
+        kvm_provision_vm_size: "{{ size }}"
+        kvm_provision_vm_net: "{{ net }}"
+        kvm_provision_cleanup_tmp: "{{ cleanup }}"
+        kvm_provision_ssh_key: "{{ ssh_pub_key }}"
 
 
       

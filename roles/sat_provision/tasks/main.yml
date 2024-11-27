@@ -1,0 +1,36 @@
+---
+# code language=ansible
+# tasks file for sat_provision
+- name: Provision server # noqa: args[module]
+  redhat.satellite.host:
+    name: "{{ server_name }}"
+    hostgroup: rhel8-server
+    provision_method: image
+    compute_resource: "libvirt hypervisor"
+    image: "rhel-8"
+    # build: true
+    location: "{{ satellite_location }}"
+    organization: "{{ satellite_organization }}"
+    state: present
+  register: host_info
+  notify: wait_for_build
+
+- name: Is host powered on? (would be off if newly provisioned) # noqa: args[module]
+  redhat.satellite.host_power:
+    name: "{{ server_name }}"
+    state: state
+  register: host_state
+
+- name: Enable build state if new build # noqa: args[module]
+  redhat.satellite.host:
+    build: true
+    name: "{{ server_name }}"
+  when: host_state.power_state is match('off')
+
+- name: If machine is down, power on  # noqa: args[module]
+  redhat.satellite.host_power:
+    name: "{{ server_name }}"
+    # yamllint disable rule:truthy
+    state: on
+    # yamllint enable rule:truthy
+  notify: wait_for_build

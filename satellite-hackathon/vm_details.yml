@@ -1,0 +1,9 @@
+vm: satellite.devel.net
+vcpus: 4
+ram_mb: 20480
+cleanup: false
+net: devel.net
+mac: 52:54:00:03:ad:0c
+ip_address: 192.168.50.2
+ssh_pub_key: "{{ lookup('file', '/home/cgs/.ssh/id_rsa.pub') }}"
+base_image_name: "rhel-9.3-x86_64-kvm.qcow2"

@@ -22,7 +22,7 @@
       ansible.builtin.include_role:
         name: redhat.satellite.settings
       vars:
-        satellite_settings:
+        satellite_settings: # noqa: var-naming[no-role-prefix]
           - name: local_boot_PXELinux
             value: "PXELinux default network boot"
         server_url: "{{ satellite_server_url }}"
@@ -80,7 +80,7 @@
     # Provision nfs server
     - name: Provision NFS server  # noqa: args[module]
       redhat.satellite.host:
-        hostgroup: "server"
+        hostgroup: "nfsroot"
         name: "{{ nfs_server }}"
         provision_method: image
         compute_resource: libvirt hypervisor
@@ -93,7 +93,7 @@
           - name: remote_execution_ssh_keys
             parameter_type: array
             value:
-              - "{{  }}"
+              - "{{ lookup('file', 'cgs_key.pub')  }}"
           - name: nfs_rpcbind_state
             value: started
           - name: nfs_rpcbind_enabled
@@ -156,6 +156,7 @@
       ansible.builtin.command:
         cmd: 'hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build'
       register: result
+      changed_when: true
       until: result.stdout.find("Installed") != -1
       retries: 30
       delay: 15

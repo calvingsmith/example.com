@@ -1,0 +1,37 @@
+---
+# code: language=ansible
+- name: Setup Discovery demo
+  hosts: satellite
+  become: true
+  vars_files:
+    - sat_repos.yml
+
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
+
+  tasks:
+    - name: Install foreman-discovery-image # noqa: args[module]
+      ansible.builtin.dnf:
+        name: foreman-discovery-image
+        state: present
+        disable_plugin: foreman-protector
+
+    - name: Change default_pxe_item_global to discovery # noqa: args[module]
+      redhat.satellite.setting:
+        name: default_pxe_item_global
+        value: "discovery"
+      notify: rebuild_pxe_default
+
+  handlers:
+    - name: Rebuild PXE default
+      listen: rebuild_pxe_default
+      ansible.builtin.uri:
+        url: "{{ satellite_server_url }}/api/provisioning_templates/build_pxe_default"
+        user: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+        method: POST
+        body_format: json
+        force_basic_auth: true
+      register: message

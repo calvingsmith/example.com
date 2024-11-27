@@ -1,0 +1,3 @@
+---
+ansible_connection: ssh
+ansible_ssh_common_args: "-J root@host4.home -o StrictHostKeyChecking=no -i id_rsa_foreman_proxy"

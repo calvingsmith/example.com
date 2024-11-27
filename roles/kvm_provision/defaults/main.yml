@@ -1,15 +1,16 @@
 ---
 # defaults file for kvm_provision
-base_image_name: rhel-8.8-x86_64-kvm.qcow2
-base_image_dir: /home/images
-# base_image_url: https://download.fedoraproject.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/{{ base_image_name }}
-base_image_sha: 5f9cd94d9a9a44ac448b434f3e28d24465deef089bbd452392b3f10e96cb8eaa
-libvirt_pool_dir: "/var/lib/libvirt/images"
-vm_name: test-rhel8
-vm_vcpus: 2
-vm_ram_mb: 2048
-vm_size: 20G
-vm_net: default
-vm_root_pass: r3dh4t1!
-cleanup_tmp: no
-ssh_key: /root/.ssh/id_rsa.pub
+kvm_provision_base_image_name: rhel-8.8-x86_64-kvm.qcow2
+kvm_provision_base_image_dir: /home/images
+# base_image_url: https://download.fedoraproject.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/{{ kvm_provision_base_image_name }}
+kvm_provision_base_image_sha: 5f9cd94d9a9a44ac448b434f3e28d24465deef089bbd452392b3f10e96cb8eaa
+kvm_provision_libvirt_pool_dir: "/var/lib/libvirt/images"
+kvm_provision_vm_name: test-rhel8
+kvm_provision_vm_vcpus: 2
+kvm_provision_vm_ram_mb: 2048
+kvm_provision_vm_size: 20G
+kvm_provision_vm_net: default
+kvm_provision_vm_root_pass: r3dh4t1!
+kvm_provision_cleanup_tmp: true
+kvm_provision_ssh_key: /root/.ssh/id_rsa.pub
+kvm_provision_root_partition: /dev/sda4

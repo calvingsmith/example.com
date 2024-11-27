@@ -1,0 +1,18 @@
+<network>
+  <name>devel.net</name>
+  <uuid>3e457264-b7a0-4ed5-8758-9aa35834b630</uuid>
+  <forward mode="nat">
+    <nat>
+      <port start="1024" end="65535"/>
+    </nat>
+  </forward>
+  <bridge name="virbr3" stp="on" delay="0"/>
+  <mac address="52:54:00:5c:b6:0f"/>
+  <domain name="{{ kvm_provision_vm_net }}"/>
+  <ip address="192.168.50.1" netmask="255.255.255.0">
+    <dhcp>
+      <range start="192.168.50.2" end="192.168.50.254"/>
+      <host mac='{{ kvm_provision_vm_mac }}' name='{{ kvm_provision_vm_name }}' ip='{{ kvm_provision_ip_addr }}'/>
+    </dhcp>
+  </ip>
+</network>

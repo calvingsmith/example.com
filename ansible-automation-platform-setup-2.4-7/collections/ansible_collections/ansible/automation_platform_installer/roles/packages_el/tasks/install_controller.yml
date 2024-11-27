@@ -1,0 +1,28 @@
+---
+- name: Clean Yum Cache for the Automation Platform Repo
+  command: "yum clean all"
+
+- name: Install the Automation Controller RPM.
+  yum:
+    name: '{{ _controller_package_name }}'
+    update_cache: true
+    state: latest
+  notify:
+    - start PostgreSQL
+    - restart supervisor
+
+- name: Install fapolicyd rules for Automation Controller if applicable
+  dnf:
+    name: '{{ controller_fapolicyd_rpm }}'
+    update_cache: yes
+    state: latest
+  when: "'fapolicyd.service' in ansible_facts.services"
+
+- name: Remove stale packages
+  yum:
+    autoremove: true
+
+- name: Update existing dependent packages
+  include_role:
+    name: ansible.automation_platform_installer.repo_management
+    tasks_from: update_dependency

@@ -1,0 +1,27 @@
+---
+- name: Delete IDM server
+  hosts: satellite
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
+
+  roles:
+    - role: redhat.rhel_idm.ipaclient
+      state: absent # noqa: var-naming[no-role-prefix]
+
+  post_tasks:
+    - name: Remove IDM from /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: '# IDM server$'
+        state: absent
+
+    - name: Delete IDM server # noqa: args[module]
+      redhat.satellite.host:
+        name: "{{ idm_server }}"
+        state: absent

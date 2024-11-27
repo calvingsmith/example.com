@@ -1,0 +1,3 @@
+---
+# Setup reverse proxy
+server_name: rproxy
