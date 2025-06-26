@@ -1,0 +1,209 @@
+- name: Configure Satellite 16 test
+  hosts: satellite
+  become: true
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+    - demo_vars.yml
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
+
+# - Create Container product
+# - Create container repository
+# - sync containers into repo
+# - Stand up client
+  tasks:
+    #
+    # configure Compliance
+    #
+    - name: Collect current settings
+      ansible.builtin.command:
+        cmd: satellite-installer --help
+      register: result
+      changed_when: false
+
+    - name: Set prefer through registered through Satelliter # noqa: args[module]
+      redhat.satellite.setting:
+        name: remote_execution_prefer_registered_through_proxy
+        value: true
+
+    # See if foreman scap client role is installed ( ansible roles sync spawns task so doing it this way)
+    - name: Is foreman_scap_client installed?
+      ansible.builtin.command:
+        cmd: hammer --no-headers ansible roles list --search theforeman.foreman_scap_client
+      register: my_output
+      failed_when: "my_output.stderr != ''"
+      changed_when: false
+
+    # Import scap client if needed
+    - name: Import foreman_scap_client if needed
+      ansible.builtin.command:
+        cmd: hammer ansible roles sync --proxy-id 1 --role-names theforeman.foreman_scap_client
+      when: my_output.stdout == ""
+      changed_when: true
+
+    # - name: Load STIG profiler # noqa: args[module]
+    #   redhat.satellite.job_template:
+    #     name: "Apply STIG profile"
+    #     job_category: "OpenSCAP"
+    #     provider_type: "script"
+    #     file_name: "/usr/share/scap-security-guide/bash/rhel8-script-stig.sh"
+    #     state: present
+
+    # Create sub host group ( host_parameters are hit or miss )
+    - name: Create Demo host group # noqa: args[module]
+      redhat.satellite.hostgroup:
+        name: "demo"
+        parent: "rhel9-server"
+        ansible_roles:
+          - theforeman.foreman_scap_client
+        activation_keys: "{{ host_activation_key_9 }}"
+        organization: "Default Organization"
+        parameters:
+          # - name: enable-remote-execution-pull
+          #   parameter_type: boolean
+          #   value: true
+          - name: package_upgrade
+            parameter_type: boolean
+            value: false
+
+    - name: Enable REX pull on the satellite
+      ansible.builtin.include_role:
+        name: redhat.satellite_operations.installer
+      vars:
+        satellite_installer_scenario: satellite # noqa: var-naming[no-role-prefix]
+        satellite_installer_options: # noqa: var-naming[no-role-prefix]
+          - "--foreman-proxy-plugin-remote-execution-script-mode pull-mqtt"
+      # when: (result.stdout | regex_search('mqtt')) is none
+
+    # Setup container demo
+    - name: Create Container product # noqa: args[module]
+      redhat.satellite.product:
+        name: "containers"
+        organization: "Default Organization"
+        state: present
+
+    - name: Create ubi9 repository # noqa: args[module]
+      redhat.satellite.repository:
+        name: UBI9
+        product: "containers"
+        organization: "Default Organization"
+        content_type: "docker"
+        download_policy: on_demand
+        docker_upstream_name: "ubi9"
+        url: "http://registry.access.redhat.com"
+        state: present
+
+    - name: Sync content # noqa: args[module]
+      redhat.satellite.repository_sync:
+        product: "containers"
+        repository: UBI9
+        organization: "Default Organization"
+
+    # # Create sub host group ( host_parameters are hit or miss )
+    # - name: Create host group # noqa: args[module]
+    #   redhat.satellite.hostgroup:
+    #     name: "stig"
+    #     parent: "rhel8-server"
+    #     ansible_roles:
+    #       - theforeman.foreman_scap_client
+    #     activation_keys: "{{ host_activation_key_8 }}"
+    #     organization: "Default Organization"
+    #     parameters:
+    #       # - name: enable-remote-execution-pull
+    #       #   parameter_type: boolean
+    #       #   value: true
+    #       - name: package_upgrade
+    #         parameter_type: boolean
+    #         value: false
+    # First refresh storage volume before provisioning
+    - name: Refresh storage volume
+      community.libvirt.virt_pool:
+        name: default
+        command: refresh
+      delegate_to: host4.home
+
+    # Provision demo server
+    - name: Provision demo server # noqa: args[module]
+      redhat.satellite.host:
+        name: "{{ demo_server }}"
+        hostgroup: rhel9-server
+        provision_method: image
+        compute_resource: "libvirt hypervisor"
+        image: "rhel-9"
+        # build: true
+        location: "{{ satellite_location }}"
+        organization: "{{ satellite_organization }}"
+        state: present
+      register: host_info
+      notify: wait_for_build
+
+    - name: Is host powered on? (would be off if newly provisioned) # noqa: args[module]
+      redhat.satellite.host_power:
+        name: "{{ demo_server }}"
+        state: state
+      register: host_state
+
+    - name: Enable build state if new build # noqa: args[module]
+      redhat.satellite.host:
+        build: true
+        name: "{{ demo_server }}"
+      when: host_state.power_state is match('off')
+
+    - name: If machine is down, power on  # noqa: args[module]
+      redhat.satellite.host_power:
+        name: "{{ demo_server }}"
+        # yamllint disable rule:truthy
+        state: on
+        # yamllint enable rule:truthy
+      notify: wait_for_build
+
+  handlers:
+    - name: Wait until server build is complete
+      listen: wait_for_build
+      ansible.builtin.command:
+        cmd: hammer host status --id "{{ host_info.entity.hosts.0.id }}" --type build
+      changed_when: false
+      register: result
+      until: result.stdout.find("Installed") != -1
+      retries: 30
+      delay: 15
+
+- name: Configure demo machine
+  hosts: demo_server
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+
+  tasks:
+    - name: Install software
+      ansible.builtin.dnf:
+        name:
+          - katello-pull-transport-migrate
+          - podman
+          - cockpit-system
+        state: present
+
+    - name: Enable client
+      ansible.builtin.systemd_service:
+        name: yggdrasild
+        state: started
+        enabled: true
+
+    - name: Create user
+      ansible.builtin.user:
+        name: builder
+        comment: Build user
+        shell: /bin/bash
+        create_home: true
+
+    - name: Drop in dockerfile
+      ansible.builtin.copy:
+        src: Dockerfile
+        dest: /home/builder/Dockerfile
+        owner: builder
+        group: builder
+        mode: '0644'
+

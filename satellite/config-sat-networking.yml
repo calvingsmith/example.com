@@ -2,7 +2,7 @@
 # code: language=ansible
 - name: Setup satellite for provisioning
   # gather_facts: false
-  hosts: satellite-16
+  hosts: satellite
   become: true
   vars_files:
     - extra_vars.yml
@@ -19,16 +19,16 @@
           - "--foreman-proxy-dns-managed true"
           - "--foreman-proxy-dns-interface eth0"
           - "--foreman-proxy-dns-zone {{ satellite_domain }}"
-          - "--foreman-proxy-dns-reverse 50.168.192.in-addr.arpa"
+          - "--foreman-proxy-dns-reverse 100.168.192.in-addr.arpa"
           - "--foreman-proxy-dhcp true"
           - "--foreman-proxy-dhcp-managed true"
           - "--foreman-proxy-dhcp-interface eth0"
-          - "--foreman-proxy-dhcp-range '192.168.50.50 192.168.50.150'"
+          - "--foreman-proxy-dhcp-range '192.168.100.50 192.168.100.150'"
           - "--foreman-proxy-dhcp-gateway {{ satellite_gateway }}"
-          - "--foreman-proxy-dhcp-nameservers 192.168.50.2"
+          - "--foreman-proxy-dhcp-nameservers 192.168.100.2"
           - "--foreman-proxy-tftp true"
           - "--foreman-proxy-tftp-managed true"
-          - "--foreman-proxy-tftp-servername 192.168.50.2"
+          - "--foreman-proxy-tftp-servername 192.168.100.2"
       # tags:
       #   - never
 
@@ -54,7 +54,7 @@
       redhat.satellite.domain:
         name: "{{ satellite_domain }}"
         description: "{{ satellite_domain }}"
-        dns_proxy: "{{ satellite_server }}"
+        dns_proxy: "{{ satellite_fqdn }}"
         server_url: "{{ satellite_server_url }}"
         username: "{{ satellite_username }}"
         password: "{{ satellite_password }}"
@@ -65,10 +65,10 @@
       vars:
         satellite_subnets: # noqa: var-naming[no-role-prefix]
           - name: "{{ satellite_domain }}"
-            network: "192.168.50.0"
+            network: "192.168.100.0"
             mask: "255.255.255.0"
             gateway: "{{ satellite_gateway }}"
-            dns_primary: "192.168.50.2"
+            dns_primary: "192.168.100.2"
             ipam: "DHCP"
             dns_proxy: "satellite.{{ satellite_domain }}"
             tftp_proxy: "satellite.{{ satellite_domain }}"

@@ -24,15 +24,17 @@
         kvm_provision_ip_addr: "{{ ip_address }}"
         kvm_provision_cleanup_tmp: "{{ cleanup }}"
         kvm_provision_ssh_key: "{{ ssh_pub_key }}"
-        kvm_provision_vm_size: "200G"
+        kvm_provision_gateway: "{{ gateway }}"
+        kvm_provision_vm_size: "20G"
 
 - name: Configure VM
-  hosts: satellite-16
+  hosts: satellite
   vars_files:
     - extra_vars.yml
     - vm_details.yml
 
   tasks:
+
     - name: Point DNS to self
       ansible.builtin.include_role:
         name: linux-system-roles.network
@@ -42,13 +44,13 @@
             type: ethernet
             state: up
             ip:
-              gateway4: "{{ gateway }}"
+              gateway4: "{{ satellite_gateway }}"
               address:
-                - "192.168.50.2/24"
+                - "{{ satellite_address }}"
               dns:
-                - "192.168.50.1"
+                - "{{ satellite_dns }}"
               dns_search:
-                - "devel.net"
+                - "{{ satellite_domain }}"
 
     - name: Subscription manager - register system
       community.general.redhat_subscription:

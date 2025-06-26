@@ -3,6 +3,7 @@
 - name: Setup Reverse Proxy
   hosts: satellite
   become: true
+  
   vars_files:
     - extra_vars.yml
     - sat_repos.yml
@@ -26,7 +27,7 @@
     - extra_vars.yml
     - sat_repos.yml
   vars:
-    - backend_server: "{{ satellite_server }}"
+    - backend_server: "{{ satellite_fqdn }}"
     - backend_port: "80"
 
   tasks:
@@ -39,7 +40,7 @@
     # Define the backend server details (replace with actual values)
     - name: Set backend server details
       ansible.builtin.set_fact:
-        backend_server: "{{ satellite_server }}"
+        backend_server: "{{ satellite_fqdn }}"
         backend_port: 443
 
     # Create a basic reverse proxy configuration file

@@ -18,7 +18,7 @@
 - name: Setup network
   community.libvirt.virt_net:
     command: modify
-    name: devel.net
+    name: "{{ net }}"
     xml: "<host mac='{{ kvm_provision_vm_mac }}' name='{{ kvm_provision_vm_name }}' ip='{{ kvm_provision_ip_addr }}'/>"
   # ignore_errors: true
 

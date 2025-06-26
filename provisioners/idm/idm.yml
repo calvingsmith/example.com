@@ -31,7 +31,7 @@
         hostgroup: rhel9-server
         provision_method: image
         compute_resource: "libvirt hypervisor"
-        image: "rhel-9.3"
+        image: "rhel-9"
         location: "{{ satellite_location }}"
         organization: "{{ satellite_organization }}"
         state: present
@@ -71,13 +71,11 @@
 
 
 - name: Playbook to configure IPA server
-  hosts: idm_server
+  hosts: idmservers
   become: true
   vars_files:
     - extra_vars.yml
   vars:
-    ipaserver_domain: example.com
-    ipaserver_realm: EXAMPLE.COM
     ipaadmin_password: "{{ default_password }}"
     ipadm_password: "{{ default_password }}"
 

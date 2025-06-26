@@ -67,9 +67,6 @@
         state: present
       # when: bash_script
 
-    # Run ansible role to configure SCAP policy
-    # - name: Run foreman_scap_client ansible role
-
     # Create sub host group ( host_parameters are hit or miss )
     - name: Create STIG host group # noqa: args[module]
       redhat.satellite.hostgroup:

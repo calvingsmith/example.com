@@ -11,7 +11,7 @@
 #     community.libvirt.virt:
 
 - name: Satellite server pre-install preparations
-  hosts: satellite-16
+  hosts: satellite
   become: true
   become_method: ansible.builtin.sudo
   environment:
@@ -34,55 +34,14 @@
       tags:
         - pre_task
 
-    #  - name: remove rhui repos
-    #    yum:
-    #      name: rh-amazon-rhui-client*
-    #      state: removed
-    #    tags:
-    #      - pre_task
-
-    # - name: Configure product-id.conf
-    #   ansible.builtin.copy:
-    #     dest: /etc/yum/pluginconf.d/product-id.conf
-    #     content: |
-    #       [main]
-    #       enabled=1`
-    #     owner: root
-    #     group: root
-    #     mode: '0644'
-    #   tags:
-    #     - pre_task
-
-
-    # - name: Enable appstream modules
-    #   ansible.builtin.command: |
-    #     dnf module enable -y {{ item.module }}:{{ item.stream }}/{{ item.profile | default('common') }}
-    #   register: result
-    #   changed_when:
-    #     - '"Enabling module streams" in result.stdout'
-    #   loop: "{{ dnf_module_list | list }}"
-    #   when:
-    #     - ansible_distribution_major_version >= '8'
-    #     - dnf_module_list | length > 0
-
-    - name: Create Sat 6.16 repo
-      ansible.builtin.copy:
-        content: |
-                  [Satellite_Engineering_Satellite_6_16_Composes_Satellite_6_16_RHEL9]
-                  name="Satellite_Engineering_Satellite_6_16_Composes_Satellite_6_16_RHEL9"
-                  baseurl="http://192.168.1.100/Satellite_Engineering_Satellite_6_16_Composes_Satellite_6_16_RHEL9/"
-                  gpgcheck = false
-                  enabled = true
-
-                  [Satellite_Engineering_Satellite_6_16_Composes_Satellite_Maintenance_6_16_RHEL9]
-                  name="Satellite_Engineering_Satellite_6_16_Composes_Satellite_Maintenance_6_16_RHEL9"
-                  baseurl="http://192.168.1.100/Satellite_Engineering_Satellite_6_16_Composes_Satellite_Maintenance_6_16_RHEL9/"
-                  gpgcheck = false
-                  enabled = true
-        dest: "/etc/yum.repos.d/sat-devel.repo"
-        owner: root
-        group: root
-        mode: '0644'
+    - name: Register repos
+      community.general.rhsm_repository:
+        name:
+          - rhel-9-for-x86_64-baseos-rpms
+          - rhel-9-for-x86_64-appstream-rpms
+          - satellite-6.16-for-rhel-9-x86_64-rpms
+          - satellite-maintenance-6.16-for-rhel-9-x86_64-rpms
+        purge: true
 
     - name: Update all packages
       ansible.builtin.dnf:
@@ -90,19 +49,34 @@
         state: latest
         update_only: true
 
-    - name: Install satellite package
-      ansible.builtin.dnf:
-        name: satellite
-        state: latest
-        update_only: true
-      tags:
-        - pre_task
-
     - name: Install chrony
       ansible.builtin.include_role:
         name: oasis_roles.system.chrony
       tags:
         - software
+
+    - name: Install satellite package # noqa: package-latest
+      ansible.builtin.dnf:
+        name:
+          - satellite
+          - foreman-installer
+        state: latest
+        # update_only: true
+      tags:
+        - pre_task
+
+    - name: Patch Satellite for keyalg
+      ansible.posix.patch:
+        src: "keyalg.patch"
+        basedir: /usr/share/foreman-installer/modules/certs/lib/puppet_x/certs/provider
+      notify: restart_satellite
+
+    - name: Patch to convert virt CD to SCSI
+      ansible.posix.patch:
+        src: q35-image.patch
+        dest: /usr/share/gems/gems/fog-libvirt-0.12.2/lib/fog/libvirt/models/compute/server.rb
+        backup: true
+      notify: restart_satellite
 
     - name: Set satellite_password
       ansible.builtin.set_fact:
@@ -117,7 +91,33 @@
       register: satellite_status
       changed_when: satellite_status.rc != 0
 
+    - name: Add self to /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        insertafter: EOF
+        line: 192.168.100.2   {{ satellite_fqdn }}
+        state: present
+
     - name: Run installer
+      ansible.builtin.include_role:
+        name: redhat.satellite_operations.installer
+      vars:
+        satellite_installer_scenario: satellite # noqa: var-naming[no-role-prefix]
+        satellite_installer_options:
+          - "--foreman-initial-admin-password {{ satellite_password }}"
+          - "--enable-foreman-plugin-remote-execution-cockpit"
+          - "--enable-foreman-plugin-openscap"
+          - "--enable-foreman-proxy-plugin-openscap"
+          - "--foreman-proxy-dns-forwarders 192.168.1.1"
+          #  - "--foreman-proxy-plugin-openscap-puppet-module true"
+        satellite_installer_command: satellite-installer
+      when:
+        - satellite_status.stdout is defined
+        - not 'OK' in satellite_status.stdout
+      tags:
+        - software
+
+    - name: Run installer again
       ansible.builtin.include_role:
         name: redhat.satellite_operations.installer
       vars:
@@ -256,6 +256,100 @@
       retries: 2
       delay: 15
       until: repo_sync is not failed
+
+  handlers:
+    - name: Restart Satellite
+      listen: restart_satellite
+      ansible.builtin.command:
+        cmd: /usr/bin/satellite-maintain service restart
+      changed_when: false
+
+# Setup Satellite for provisioning
+#
+
+- name: Setup satellite for provisioning
+  # gather_facts: false
+  hosts: satellite
+  become: true
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+
+  tasks:
+    - name: Setup DNS, DHCP  and TFTP
+      ansible.builtin.include_role:
+        name: redhat.satellite_operations.installer
+      vars:
+        satellite_installer_scenario: satellite # noqa: var-naming[no-role-prefix]
+        satellite_installer_options:
+          - "--foreman-proxy-dns true"
+          - "--foreman-proxy-dns-managed true"
+          - "--foreman-proxy-dns-interface eth0"
+          - "--foreman-proxy-dns-zone {{ satellite_domain }}"
+          - "--foreman-proxy-dns-reverse 100.168.192.in-addr.arpa"
+          - "--foreman-proxy-dhcp true"
+          - "--foreman-proxy-dhcp-managed true"
+          - "--foreman-proxy-dhcp-interface eth0"
+          - "--foreman-proxy-dhcp-range '192.168.100.50 192.168.100.150'"
+          - "--foreman-proxy-dhcp-gateway {{ satellite_gateway }}"
+          - "--foreman-proxy-dhcp-nameservers 192.168.100.2"
+          - "--foreman-proxy-tftp true"
+          - "--foreman-proxy-tftp-managed true"
+          - "--foreman-proxy-tftp-servername 192.168.100.2"
+      # tags:
+      #   - never
+
+    # - name: Point DNS to self
+    #   ansible.builtin.include_role:
+    #     name: linux-system-roles.network
+    #   vars:
+    #     network_provider: nm
+    #     network_allow_restart: true
+    #     network_connections:
+    #       - name: eth0
+    #         type: ethernet
+    #         autoconnect: true
+    #         ip:
+    #           gateway4: "192.168.100.1"
+    #           address:
+    #             - "192.168.100.2/24"
+    #           dns:
+    #             - "192.168.100.2"
+    #           dns_search:
+    #             - "{{ satellite_domain }}"
+    - name: Point DNS to self
+      ansible.builtin.lineinfile:
+        path: /etc/resolv.conf
+        search_string: 192.168.1.1
+        line: nameserver 192.168.100.2
+
+    - name: Setup domain
+      redhat.satellite.domain:
+        name: "{{ satellite_domain }}"
+        description: "{{ satellite_domain }}"
+        dns_proxy: "{{ satellite_fqdn }}"
+        server_url: "{{ satellite_server_url }}"
+        username: "{{ satellite_username }}"
+        password: "{{ satellite_password }}"
+
+    - name: Setup subnet
+      ansible.builtin.include_role:
+        name: redhat.satellite.subnets
+      vars:
+        satellite_subnets: # noqa: var-naming[no-role-prefix]
+          - name: "{{ satellite_domain }}"
+            network: "192.168.100.0"
+            mask: "255.255.255.0"
+            gateway: "{{ satellite_gateway }}"
+            dns_primary: "192.168.100.2"
+            ipam: "DHCP"
+            dns_proxy: "satellite.{{ satellite_domain }}"
+            tftp_proxy: "satellite.{{ satellite_domain }}"
+            dhcp_proxy: "satellite.{{ satellite_domain }}"
+            discovery_proxy: "satellite.{{ satellite_domain }}"
+            remote_execution_proxies: satellite.{{ satellite_domain }}"
+            domains:
+              - "{{ satellite_domain }}"
 
     # https://projects.theforeman.org/issues/10266
     # Commented for 6.11?

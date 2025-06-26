@@ -21,10 +21,10 @@
         backup: true
       tags: never
 
-    - name: Apply patch to convert virt CD to SCSI
+    - name: Patch to convert virt CD to SCSI
       ansible.posix.patch:
         src: q35-image.patch
-        dest: /usr/share/gems/gems/fog-libvirt-0.12.0/lib/fog/libvirt/models/compute/server.rb
+        dest: /usr/share/gems/gems/fog-libvirt-0.12.2/lib/fog/libvirt/models/compute/server.rb
         backup: true
 
     - name: Install additional software
@@ -206,8 +206,8 @@
         organization: "{{ satellite_organization }}"
         locations:
           - "{{ satellite_location }}"
-        content_source: "{{ satellite_server }}"
-        openscap_proxy: "{{ satellite_server }}"
+        content_source: "{{ satellite_fqdn }}"
+        openscap_proxy: "{{ satellite_fqdn }}"
         state: present
 
     - name: Setup server hostgroup (RHEL 9)   # noqa: args[module]
@@ -220,7 +220,7 @@
         lifecycle_environment: "Library"
         content_view: "Default Organization View"
         subnet: "Example network"
-        operatingsystem: "RedHat 9.3"
+        operatingsystem: "RHEL 9.5"
         pxe_loader: "PXELinux BIOS"
         ptable: "Kickstart default"
         architecture: "x86_64"
@@ -232,6 +232,6 @@
         organization: "{{ satellite_organization }}"
         locations:
           - "{{ satellite_location }}"
-        content_source: "{{ satellite_server }}"
-        openscap_proxy: "{{ satellite_server }}"
+        content_source: "{{ satellite_fqdn }}"
+        openscap_proxy: "{{ satellite_fqdn }}"
         state: present

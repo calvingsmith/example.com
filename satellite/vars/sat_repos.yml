@@ -10,7 +10,7 @@ satellite_client_repo_8: "satellite-client-6-for-rhel-8-x86_64-rpms"
 host_activation_key_9: "ak-rhel9"
 satellite_client_repo_9: "satellite-client-6-for-rhel-9-x86_64-rpms"
 
-# satellite_server_url: "https://{{ satellite_server }}"
+# satellite_server_url: "https://{{ satellite_fqdn }}"
 satellite_server_url: "https://satellite.{{ satellite_domain }}/"
 satellite_organization: "Default Organization"
 satellite_location: "Default Location"
@@ -36,17 +36,23 @@ satellite_products:
       - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
         releasever: 9
       - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
-        releasever: 9.2
+        releasever: 9.4
       - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (Kickstart)
-        releasever: 9.2
+        releasever: 9.4
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
+        releasever: 9.5
       - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (Kickstart)
-        releasever: 9.3
+        releasever: 9.5
       - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
         releasever: 9
       - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
-        releasever: 9.2
+        releasever: 9.4
+      - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (Kickstart)
+        releasever: 9.4
       - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
-        releasever: 9.3
+        releasever: 9.5
+      - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (Kickstart)
+        releasever: 9.5
       - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 (RPMs)
   - name: Red Hat Enterprise Linux for x86_64
     repository_sets:
@@ -63,9 +69,9 @@ satellite_products:
       - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (Kickstart)
         releasever: 8.9
       - name: Red Hat Satellite Client 6 for RHEL 8 x86_64 (RPMs)
-  - name: Extra Packages for Enterprise Linux 8
+  - name: Extra Packages for Enterprise Linux 9
     repositories:
-      - name: Extra Packages for Enterprise Linux 8 x86_64
+      - name: Extra Packages for Enterprise Linux 9 x86_64
         content_type: yum
-        url: https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/
+        url: https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/
         mirror_on_sync: true

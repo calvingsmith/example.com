@@ -1,0 +1,16 @@
+Ansible stuff:
+- assign foreman_scap_client role
+- Create compliance policy
+- assign to demo
+- fix DNS on satellite (satellite-setup)
+----------
+- install podman
+- install Dockerfile
+
+Walkthrough
+- container push 
+ - 
+- openscap remediation
+- 
+-------
+- Fix DNS server on satellite

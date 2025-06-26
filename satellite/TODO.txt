@@ -1,0 +1,2 @@
+- assign foreman_scap_client to server
+- why isn't the 
