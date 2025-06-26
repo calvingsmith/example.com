@@ -1,0 +1,27 @@
+---
+# code: language=ansible
+- name: Delete Satellite 16 demo
+  # gather_facts: false
+  hosts: satellite
+  become: true
+  vars_files:
+    - extra_vars.yml
+    - sat_repos.yml
+    - demo_vars.yml
+  environment:
+    SATELLITE_SERVER_URL: "{{ satellite_server_url }}"
+    SATELLITE_USERNAME: "{{ satellite_username }}"
+    SATELLITE_PASSWORD: "{{ satellite_password }}"
+
+  tasks:
+    # Delete compliance server
+    - name: Delete host
+      redhat.satellite.host: # noqa: args[module]
+        name: "{{ demo_server }}"
+        state: absent
+
+    - name: Delete UBI9 product # noqa: args[module]
+      redhat.satellite.product:
+        name: "containers"
+        organization: "{{ satellite_organization }}"
+        state: absent

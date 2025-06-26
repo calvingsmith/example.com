@@ -1,0 +1,28 @@
+---
+# code: language=ansible
+# Delete NFS server key (locally)
+- name: Delete satellite
+  hosts: libvirt
+  vars_files:
+    - vm_details.yml
+
+  tasks:
+    - name: Remove nfs server key
+      ansible.builtin.known_hosts:
+        name: "{{ nfs_server }}"
+        state: absent
+
+    - name: Unregister server
+      community.general.redhat_subscription:
+        state: absent
+
+    - name: Destroy vm
+      community.libvirt.virt:
+        name: "{{ vm }}"
+        state: destroyed
+
+    - name: Get rid of vm
+      community.libvirt.virt:
+        command: "undefine"
+        name: "{{ vm }}" # noqa: jinja[spacing]
+        # force: true # noqa: args[module]

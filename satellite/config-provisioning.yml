@@ -14,27 +14,16 @@
     SATELLITE_PASSWORD: "{{ satellite_password }}"
 
   tasks:
-    - name: Apply patch for instance based provisioning on libvirt
-      ansible.posix.patch:
-        src: backing_volume.patch
-        dest: /usr/share/gems/gems/fog-libvirt-0.9.0/lib/fog/libvirt/models/compute/templates/volume.xml.erb
-        backup: true
-      tags: never
+    # - name: Apply patch for instance based provisioning on libvirt
+    #   ansible.posix.patch:
+    #     src: backing_volume.patch/home/images/rhel-9.5-x86_64-kvm.qcow2"
 
-    - name: Apply patch to convert virt CD to SCSI
+    - name: Patch to convert virt CD to SCSI
       ansible.posix.patch:
         src: q35-image.patch
-        dest: /usr/share/gems/gems/fog-libvirt-0.12.0/lib/fog/libvirt/models/compute/server.rb
+        dest: /usr/share/gems/gems/fog-libvirt-0.12.2/lib/fog/libvirt/models/compute/server.rb
         backup: true
-
-    - name: Install additional software
-      ansible.builtin.yum:
-        name:
-          - libvirt-client
-          - rhel-system-roles
-        disable_plugin:
-          - foreman-protector
-        state: present
+      notify: restart_satellite
 
     - name: SSH key create
       ansible.builtin.user:
@@ -50,15 +39,15 @@
         key: "{{ ssh_key.ssh_public_key }}"
       delegate_to: "root@host4.home"
 
-    - name: Collect ssh keys from host4.home
-      ansible.builtin.command: "ssh-keyscan 192.168.100.1"
+    - name: Collect ssh keys from hypervisor
+      ansible.builtin.command: "ssh-keyscan {{ libvirt_compute }}"
       register: "host_keys"
       changed_when: false
 
     - name: Copy over known_hosts key
       ansible.builtin.known_hosts:
         path: /usr/share/foreman/.ssh/known_hosts
-        name: 192.168.100.1
+        name: "{{ libvirt_compute }}"
         key: "{{ host_keys.stdout }}"
 
     - name: Fixup permissions for known_hosts file
@@ -73,7 +62,7 @@
         name: libvirt hypervisor
         provider: libvirt
         provider_params:
-          url: qemu+ssh://root@192.168.100.1/system
+          url: "qemu+ssh://root@{{ libvirt_compute }}/system"
           set_console_password: false
 
     - name: Create compute item.profile # noqa: args[module]
@@ -89,7 +78,7 @@
               nics_attributes:
                 0:
                   type: network
-                  network: example.com
+                  network: "{{ satellite_domain }}"
                   model: virtio
               volumes_attributes:
                 0:
@@ -105,8 +94,8 @@
         kind: "user_data"
         name: "Kickstart default user data (fixed)"
         operatingsystems:
-          - "Redhat 8.8"
-          - "RedHat 9.3"
+         # - "Redhat 8.8"
+          - "RHEL 9.5"
         state: present
 
     - name: Associate new userdata template
@@ -114,18 +103,18 @@
         name: redhat.satellite.operatingsystems
       vars:
         satellite_operatingsystems: # noqa: var-naming[no-role-prefix]
-          - name: "Redhat"
-            major: "8"
-            minor: "8"
-            os_family: "Redhat"
-            password_hash: "SHA256"
-            architectures: "x86_64"
-            default_templates:
-              - template_kind: "user_data"
-                provisioning_template: "Kickstart default user data (fixed)"
+          # - name: "Redhat"
+          #   major: "8"
+          #   minor: "8"
+          #   os_family: "Redhat"
+          #   password_hash: "SHA256"
+          #   architectures: "x86_64"
+          #   default_templates:
+          #     - template_kind: "user_data"
+          #       provisioning_template: "Kickstart default user data (fixed)"
           - name: "RedHat"
             major: "9"
-            minor: "3"
+            minor: "4"
             os_family: "Redhat"
             password_hash: "SHA256"
             architectures: "x86_64"
@@ -135,13 +124,38 @@
 
     # Need to parameterize
     #
+    # - name: Add image  # noqa: args[module]
+    #   redhat.satellite.image:
+    #     name: rhel-8
+    #     architecture: x86_64
+    #     operatingsystem: "Redhat 8.8" # This might change to RedHat 8.8 on rebuild"
+    #     uuid: "/home/images/rhel-8.8-x86_64-kvm.qcow2"
+    #     compute_resource: libvirt hypervisor
+    #     image_username: root
+    #     user_data: true
+    #     state: present
+    - name: Copy image over
+      ansible.builtin.copy:
+        src: rhel-9.5-x86_64-kvm.qcow2
+        dest: /home/images/rhel-9.5-x86_64-kvm.qcow2
+        owner: qemu
+        group: qemu
+        mode: '0644'
+      delegate_to: host4.home
+
+    - name: Refresh storage volume
+      community.libvirt.virt_pool:
+        name: images
+        command: refresh
+      delegate_to: host4.home
+
     - name: Add image  # noqa: args[module]
       redhat.satellite.image:
-        name: rhel-8
+        name: rhel-9
         architecture: x86_64
-        operatingsystem: "Redhat 8.8" # This might change to RedHat 8.8 on rebuild"
-        uuid: "/home/images/rhel-8.8-x86_64-kvm.qcow2"
-        compute_resource: libvirt hypervisor
+        operatingsystem: "RHEL 9.5"
+        uuid: "/home/images/rhel-9.5-x86_64-kvm.qcow2"
+        compute_resource: "libvirt hypervisor"
         image_username: root
         user_data: true
         state: present
@@ -156,19 +170,19 @@
           - name: root_pass
             value: "{{ default_password }}"
 
-    - name: Setup activationkey (RHEL 8)   # noqa: args[module]
-      redhat.satellite.activation_key:
-        name: "{{ host_activation_key_8 }}"
-        content_view: "Default Organization View"
-        lifecycle_environment: "Library"
-        content_overrides:
-          - label: "{{ satellite_client_repo_8 }}"
-            override: enabled
-        release_version: 8
-        # service_level: Standard
-        purpose_role: "Red Hat Enterprise Linux Server"
-        state: present
-        organization: "{{ satellite_organization }}"
+    # - name: Setup activationkey (RHEL 8)   # noqa: args[module]
+    #   redhat.satellite.activation_key:
+    #     name: "{{ host_activation_key_8 }}"
+    #     content_view: "Default Organization View"
+    #     lifecycle_environment: "Library"
+    #     content_overrides:
+    #       - label: "{{ satellite_client_repo_8 }}"
+    #         override: enabled
+    #     release_version: 8
+    #     # service_level: Standard
+    #     purpose_role: "Red Hat Enterprise Linux Server"
+    #     state: present
+    #     organization: "{{ satellite_organization }}"
 
     - name: Setup activationkey (RHEL 9)   # noqa: args[module]
       redhat.satellite.activation_key:
@@ -184,31 +198,31 @@
         state: present
         organization: "{{ satellite_organization }}"    # Set up host group "hosts"  (test)
 
-    - name: Setup server hostgroup (RHEL 8)   # noqa: args[module]
-      redhat.satellite.hostgroup:
-        name: rhel9-server
-        activation_keys: "{{ host_activation_key_8 }}"
-        compute_resource: "libvirt hypervisor"
-        compute_profile: "libvirt-compute"
-        domain: "example.com"
-        lifecycle_environment: "Library"
-        # content_view: "Default Organization View"
-        subnet: "Example network"
-        operatingsystem: "Redhat 8.8"
-        pxe_loader: "PXELinux BIOS"
-        ptable: "Kickstart default"
-        architecture: "x86_64"
-        parameters:
-          - name: remote_execution_ssh_keys
-            parameter_type: array
-            value:
-              - "{{ lookup('file', 'cgs_key.pub') }}"
-        organization: "{{ satellite_organization }}"
-        locations:
-          - "{{ satellite_location }}"
-        content_source: "{{ satellite_server }}"
-        openscap_proxy: "{{ satellite_server }}"
-        state: present
+    # - name: Setup server hostgroup (RHEL 8)   # noqa: args[module]
+    #   redhat.satellite.hostgroup:
+    #     name: rhel8-server
+    #     activation_keys: "{{ host_activation_key_8 }}"
+    #     compute_resource: "libvirt hypervisor"
+    #     compute_profile: "libvirt-compute"
+    #     domain: "{{ satellite_domain }}"
+    #     lifecycle_environment: "Library"
+    #     # content_view: "Default Organization View"
+    #     subnet: "{{ satellite_domain }}"
+    #     operatingsystem: "Redhat 8.8"
+    #     pxe_loader: "PXELinux BIOS"
+    #     ptable: "Kickstart default"
+    #     architecture: "x86_64"
+    #     parameters:
+    #       - name: remote_execution_ssh_keys
+    #         parameter_type: array
+    #         value:
+    #           - "{{ lookup('file', 'cgs_key.pub') }}"
+    #     organization: "{{ satellite_organization }}"
+    #     locations:
+    #       - "{{ satellite_location }}"
+    #     content_source: "{{ satellite_fqdn }}"
+    #     openscap_proxy: "{{ satellite_fqdn }}"
+    #     state: present
 
     - name: Setup server hostgroup (RHEL 9)   # noqa: args[module]
       redhat.satellite.hostgroup:
@@ -216,11 +230,11 @@
         activation_keys: "{{ host_activation_key_9 }}"
         compute_resource: "libvirt hypervisor"
         compute_profile: "libvirt-compute"
-        domain: "example.com"
+        domain: "{{ satellite_domain }}"
         lifecycle_environment: "Library"
         content_view: "Default Organization View"
-        subnet: "Example network"
-        operatingsystem: "RedHat 9.3"
+        subnet: "{{ satellite_domain }}"
+        operatingsystem: "RHEL 9.5"
         pxe_loader: "PXELinux BIOS"
         ptable: "Kickstart default"
         architecture: "x86_64"
@@ -232,6 +246,13 @@
         organization: "{{ satellite_organization }}"
         locations:
           - "{{ satellite_location }}"
-        content_source: "{{ satellite_server }}"
-        openscap_proxy: "{{ satellite_server }}"
+        content_source: "{{ satellite_fqdn }}"
+        openscap_proxy: "{{ satellite_fqdn }}"
         state: present
+
+  handlers:
+    - name: Restart Satellite if needed
+      ansible.builtin.command:
+        cmd: /usr/bin/satellite-maintain service restart
+      changed_when: false
+      listen: restart_satellite

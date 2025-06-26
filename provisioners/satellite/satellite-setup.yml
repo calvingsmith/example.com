@@ -79,11 +79,11 @@
     - name: Installer repos
       community.general.rhsm_repository:
         name:
-          - rhel-8-for-x86_64-baseos-rpms
-          - rhel-8-for-x86_64-appstream-rpms
-          - satellite-6.13-for-rhel-8-x86_64-rpms
-          - satellite-maintenance-6.13-for-rhel-8-x86_64-rpms
-          - ansible-2.9-for-rhel-8-x86_64-rpms
+          - rhel-9-for-x86_64-baseos-rpms
+          - rhel-9-for-x86_64-appstream-rpms
+          - Satellite_Engineering_Satellite_6_16_Composes_Satellite_6_16_RHEL9
+          - Satellite_Engineering_Satellite_6_16_Composes_Satellite_Maintenance_6_16_RHEL9
+          - ansible-2.9-for-rhel-9-x86_64-rpms
         state: enabled
         purge: true
       tags:

@@ -1,10 +1,10 @@
-pool_dir: "{{ kvm_provision_libvirt_pool_dir }}"
-vm: satellite-16.devel.net
+vm: satellite.example.com
 vcpus: 4
 ram_mb: 20480
 cleanup: false
-net: devel.net
+net: example.com
 mac: 52:54:00:03:ad:0c
-ip_address: 192.168.50.2
+ip_address: 192.168.100.2
+gateway: 192.168.100.1
 ssh_pub_key: "{{ lookup('file', '/home/cgs/.ssh/id_rsa.pub') }}"
 base_image_name: "rhel-9.3-x86_64-kvm.qcow2"

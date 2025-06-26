@@ -1,7 +1,7 @@
 ---
 - name: Satellite server pre-install preparations
   hosts: 'all'
-  become: yes
+  become: true
   become_method: sudo
   environment:
     LANG: en_US.UTF-8

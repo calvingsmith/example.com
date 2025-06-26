@@ -12,3 +12,5 @@ default_password: ""
 org_id: ""
 # Activation key for provisioning
 satellite_activation_key: ""
+# Libvirt hypervisor
+libvirt_compute: ""
