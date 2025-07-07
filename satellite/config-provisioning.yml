@@ -17,13 +17,24 @@
     # - name: Apply patch for instance based provisioning on libvirt
     #   ansible.posix.patch:
     #     src: backing_volume.patch/home/images/rhel-9.5-x86_64-kvm.qcow2"
+    - name: Check for patch file
+      ansible.builtin.stat:
+        path: /usr/share/gems/gems/fog-libvirt-0.12.2/lib/fog/libvirt/models/compute/server.rb
+      register: patch_file
 
-    - name: Patch to convert virt CD to SCSI
-      ansible.posix.patch:
-        src: q35-image.patch
-        dest: /usr/share/gems/gems/fog-libvirt-0.12.2/lib/fog/libvirt/models/compute/server.rb
-        backup: true
-      notify: restart_satellite
+    - name: Patch to convert virt CD to SCSI (if needed)
+      when: patch_file.stat.exists
+      block:
+        - name: Download q35-image.patch
+          ansible.builtin.get_url:
+            url: "https://raw.githubusercontent.com/casmith/ansible-foreman-satellite/main/files/q35-image.patch"
+            dest: /tmp/q35-image.patch
+        - name: Apply q35-image.patch
+          ansible.posix.patch:
+            src: /tmp/q35-image.patch
+            dest: /usr/share/gems/gems/fog-libvirt-0.12.2/lib/fog/libvirt/models/compute/server.rb
+            backup: true
+          notify: restart_satellite
 
     - name: SSH key create
       ansible.builtin.user:
@@ -136,7 +147,7 @@
     #     state: present
     - name: Copy image over
       ansible.builtin.copy:
-        src: rhel-9.5-x86_64-kvm.qcow2
+        src: "{{ rhel9_image }}"
         dest: /home/images/rhel-9.5-x86_64-kvm.qcow2
         owner: qemu
         group: qemu

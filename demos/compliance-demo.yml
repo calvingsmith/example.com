@@ -27,7 +27,7 @@
       register: result
       changed_when: false
 
-    - name: Set prefer through registered through Satelliter # noqa: args[module]
+    - name: Set prefer through registered through Satellite # noqa: args[module]
       redhat.satellite.setting:
         name: remote_execution_prefer_registered_through_proxy
         value: true
@@ -58,14 +58,14 @@
       when: my_output.stdout == ""
       changed_when: true
 
-    - name: Load STIG profiler # noqa: args[module]
-      redhat.satellite.job_template:
-        name: "Apply STIG profile"
-        job_category: "OpenSCAP"
-        provider_type: "script"
-        file_name: "/usr/share/scap-security-guide/bash/rhel8-script-stig.sh"
-        state: present
-      # when: bash_script
+    # - name: Load STIG profiler # noqa: args[module]
+    #   redhat.satellite.job_template:
+    #     name: "Apply STIG profile"
+    #     job_category: "OpenSCAP"
+    #     provider_type: "script"
+    #     file_name: "/usr/share/scap-security-guide/bash/rhel8-script-stig.sh"
+    #     state: present
+    #   # when: bash_script
 
     # Create sub host group ( host_parameters are hit or miss )
     - name: Create STIG host group # noqa: args[module]

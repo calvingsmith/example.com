@@ -1,0 +1,99 @@
+activation_keys:
+-   auto_attach: true
+    content_view:
+        id: 1
+        name: Default Organization View
+    content_view_environment_labels: Library
+    content_view_environments:
+    -   content_view:
+            composite: false
+            content_view_default: true
+            content_view_environment_id: 1
+            content_view_version: '1.0'
+            content_view_version_id: 1
+            content_view_version_latest: true
+            id: 1
+            name: Default Organization View
+        label: Library
+        lifecycle_environment:
+            id: 1
+            lifecycle_environment_library: true
+            name: Library
+    content_view_id: 1
+    created_at: 2024-11-22 09:14:16 UTC
+    description: null
+    environment:
+        id: 1
+        name: Library
+    environment_id: 1
+    host_collections: []
+    id: 1
+    max_hosts: null
+    multi_content_view_environment: false
+    name: ak-rhel9
+    organization:
+        id: 1
+        label: Default_Organization
+        name: Default Organization
+    organization_id: 1
+    permissions:
+        destroy_activation_keys: true
+        edit_activation_keys: true
+        view_activation_keys: true
+    products: []
+    purpose_role: Red Hat Enterprise Linux Server
+    purpose_usage: null
+    release_version: '9'
+    unlimited_hosts: true
+    updated_at: 2024-11-22 09:14:17 UTC
+    usage_count: 2
+    user_id: 4
+-   auto_attach: true
+    content_view:
+        id: 2
+        name: patch bundle
+    content_view_environment_labels: week1/patch_bundle
+    content_view_environments:
+    -   content_view:
+            composite: false
+            content_view_default: false
+            content_view_environment_id: 4
+            content_view_version: '2.0'
+            content_view_version_id: 3
+            content_view_version_latest: true
+            id: 2
+            name: patch bundle
+        label: week1/patch_bundle
+        lifecycle_environment:
+            id: 3
+            lifecycle_environment_library: false
+            name: week1
+    content_view_id: 2
+    created_at: 2025-04-01 17:23:44 UTC
+    description: null
+    environment:
+        id: 3
+        name: week1
+    environment_id: 3
+    host_collections: []
+    id: 2
+    max_hosts: null
+    multi_content_view_environment: false
+    name: foo
+    organization:
+        id: 1
+        label: Default_Organization
+        name: Default Organization
+    organization_id: 1
+    permissions:
+        destroy_activation_keys: true
+        edit_activation_keys: true
+        view_activation_keys: true
+    products: []
+    purpose_role: Red Hat Enterprise Linux Server
+    purpose_usage: Production
+    release_version: null
+    unlimited_hosts: true
+    updated_at: 2025-04-01 17:24:57 UTC
+    usage_count: 0
+    user_id: 4

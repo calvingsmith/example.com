@@ -1,0 +1,38 @@
+---
+version: 3
+
+images:
+  base_image:
+    name: docker.io/redhat/ubi9:latest
+    pull: true
+
+additional_build_files:
+  - src: /home/casmith/tmp/example.com/collections/redhat-satellite-5.4.0.tar.gz
+    dest: src
+#  - src: /home/casmith/VirtualMachines/rhel-9.5-x86_64-kvm.qcow2
+#    dest: src
+
+#  - src: /home/casmith/.ssh/cgs_key
+#    dest:
+# additional_build_steps:
+#   append_final: 
+# #    - RUN ls -l /build
+#     - RUN echo "------------"
+#     - RUN ls -l /runner
+    
+
+dependencies:
+  ansible_core:
+    package_pip: ansible-core
+  ansible_runner:
+    package_pip: ansible-runner
+  system:
+  - openssh-clients
+  - sshpass
+  galaxy:
+    collections:
+      - name: community.libvirt
+      - name: community.general
+      - name: ansible.posix
+      - name: src/redhat-satellite-5.4.0.tar.gz
+        type: file
