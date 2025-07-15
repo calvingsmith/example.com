@@ -1,4 +1,0 @@
-2025-07-01T11:30:20.423269+00:00 ERROR 'ansible_navigator.image_manager.puller._log_message' Execution environment pull failed
-2025-07-01T11:40:35.580489+00:00 ERROR 'ansible_navigator.image_manager.puller._log_message' Execution environment pull failed
-2025-07-01T11:41:46.352436+00:00 ERROR 'ansible_navigator.image_manager.puller._log_message' Execution environment pull failed
-2025-07-01T11:43:49.596024+00:00 ERROR 'ansible_navigator.image_manager.puller._log_message' Execution environment pull failed
